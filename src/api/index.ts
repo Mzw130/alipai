@@ -186,22 +186,25 @@ export async function enhanceImage(params: EnhanceParams): Promise<EnhanceResult
 
   // 处理图片 URI (file:// 或 content://)
   if (params.imageUri.startsWith('file://') || params.imageUri.startsWith('content://') || params.imageUri.startsWith('/')) {
-    const file = {
+    formData.append('image', {
       uri: params.imageUri,
       type: 'image/jpeg',
       name: 'image.jpg',
-    } as any;
-    formData.append('image', file);
+    } as any);
   } else if (params.imageUri.startsWith('data:')) {
-    // base64 data URL
-    const response = await fetch(params.imageUri);
-    const blob = await response.blob();
-    formData.append('image', blob, 'image.png');
+    // base64 data URL — 直接传 URI
+    formData.append('image', {
+      uri: params.imageUri,
+      type: 'image/png',
+      name: 'image.png',
+    } as any);
   } else {
     // 远程 URL
-    const response = await fetch(params.imageUri);
-    const blob = await response.blob();
-    formData.append('image', blob, 'image.jpg');
+    formData.append('image', {
+      uri: params.imageUri,
+      type: 'image/jpeg',
+      name: 'image.jpg',
+    } as any);
   }
 
   formData.append('tool_type', params.toolType);
@@ -211,9 +214,11 @@ export async function enhanceImage(params: EnhanceParams): Promise<EnhanceResult
   }
 
   if (params.maskUri) {
-    const maskResponse = await fetch(params.maskUri);
-    const maskBlob = await maskResponse.blob();
-    formData.append('mask', maskBlob, 'mask.png');
+    formData.append('mask', {
+      uri: params.maskUri,
+      type: 'image/png',
+      name: 'mask.png',
+    } as any);
   }
 
   if (params.webhookUrl) {
@@ -252,16 +257,17 @@ export async function generateVideo(
   const formData = new FormData();
 
   if (imageUri.startsWith('file://') || imageUri.startsWith('/')) {
-    const file = {
+    formData.append('image', {
       uri: imageUri,
       type: 'image/jpeg',
       name: 'image.jpg',
-    } as any;
-    formData.append('image', file);
+    } as any);
   } else {
-    const response = await fetch(imageUri);
-    const blob = await response.blob();
-    formData.append('image', blob, 'image.jpg');
+    formData.append('image', {
+      uri: imageUri,
+      type: 'image/jpeg',
+      name: 'image.jpg',
+    } as any);
   }
 
   // 注意: prompt 和 mode 需要作为其他 parts 发送
@@ -395,16 +401,17 @@ export async function uploadImage(uri: string): Promise<{ url: string } | null> 
   const formData = new FormData();
 
   if (uri.startsWith('file://') || uri.startsWith('/')) {
-    const file = {
+    formData.append('image', {
       uri,
       type: 'image/jpeg',
       name: 'upload.jpg',
-    } as any;
-    formData.append('image', file);
+    } as any);
   } else {
-    const response = await fetch(uri);
-    const blob = await response.blob();
-    formData.append('image', blob, 'upload.jpg');
+    formData.append('image', {
+      uri,
+      type: 'image/jpeg',
+      name: 'upload.jpg',
+    } as any);
   }
 
   const res = await request<{ url: string; file_id: string; width: number; height: number; size_bytes: number }>(

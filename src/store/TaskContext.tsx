@@ -105,9 +105,9 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
           updateTask(taskId, {
             status: 'completed',
             progress: 100,
-            resultUrl: result.result_url,
-            processingTimeMs: result.processing_time_ms,
-            creditsUsed: result.credits_used,
+            resultUrl: result.result_url ?? undefined,
+            processingTimeMs: (result as any).processing_time_ms,
+            creditsUsed: (result as any).credits_used,
           });
           pollingRef.current.delete(taskId);
 
@@ -235,6 +235,13 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
 
 async function pollTaskStatus(taskId: string): Promise<EnhanceResult | null> {
   try {
-    return await getTaskStatus(taskId);
+    const res = await getTaskStatus(taskId);
+    if (!res) return null;
+    return {
+      task_id: res.task_id,
+      status: res.status as 'processing' | 'completed' | 'failed',
+      result_url: res.result_url ?? undefined,
+      error_message: res.error_message ?? undefined,
+    };
   } catch { return null; }
 }

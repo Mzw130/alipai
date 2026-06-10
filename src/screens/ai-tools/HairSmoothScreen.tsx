@@ -5,20 +5,20 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors, FontSize, FontWeight, Spacing, BorderRadius, Shadow } from '../../theme';
 import { useAiTool } from '../../hooks/useAiTool';
 
-export default function () {
+export default function HairSmoothScreen() {
   const n = useNavigation();
-  const { selectedImage, isProcessing, resultUrl, error, pickImage, takePhoto, generate, clear } = useAiTool('');
+  const { selectedImage, isProcessing, resultUrl, error, pickImage, takePhoto, generate, clear } = useAiTool('hair_smooth');
 
   return (
     <SafeAreaView style={s.c}>
-      <View style={s.h}><TouchableOpacity onPress={()=>n.goBack()}><Ionicons name="chevron-back" size={24} color={Colors.text} /></TouchableOpacity><View style={s.hc}><Text style={s.ht}></Text><Text style={s.hs}></Text></View><View style={{width:24}} /></View>
+      <View style={s.h}><TouchableOpacity onPress={()=>n.goBack()}><Ionicons name="chevron-back" size={24} color={Colors.text} /></TouchableOpacity><View style={s.hc}><Text style={s.ht}>顺滑秀发</Text><Text style={s.hs}>Hair Smoothing</Text></View><View style={{width:24}} /></View>
       <ScrollView contentContainerStyle={s.ct}>
         {!selectedImage ? <TouchableOpacity style={s.ia} onPress={pickImage}><Ionicons name="camera" size={40} color={Colors.primary} /><Text style={s.ut}>选择图片</Text><Text style={s.us}>从相册选取或拍照</Text></TouchableOpacity>
         : <View style={s.pv}><Image source={{uri:selectedImage}} style={s.pi} /><View style={s.pb}><TouchableOpacity style={s.ab} onPress={pickImage}><Ionicons name="swap-horizontal" size={16} color={Colors.text} /><Text style={s.at}>换图</Text></TouchableOpacity><TouchableOpacity style={s.ab} onPress={takePhoto}><Ionicons name="camera" size={16} color={Colors.text} /><Text style={s.at}>拍照</Text></TouchableOpacity><TouchableOpacity style={s.ab} onPress={clear}><Ionicons name="trash" size={16} color={Colors.error} /><Text style={[s.at,{color:Colors.error}]}>移除</Text></TouchableOpacity></View></View>}
         {resultUrl && <View style={s.rc}><Text style={s.rt}>✨ 处理完成</Text><Image source={{uri:resultUrl}} style={s.ri} /></View>}
         {error && <View style={s.er}><Ionicons name="alert-circle" size={18} color={Colors.error} /><Text style={s.et}>{error}</Text></View>}
-        {!resultUrl && <View style={s.dc}><Ionicons name="" size={24} color={Colors.primary} /><View style={{flex:1}}><Text style={s.dt}></Text><Text style={s.de}></Text></View></View>}
-        <TouchableOpacity style={[s.gb,(!selectedImage||isProcessing)&&s.gbd]} onPress={()=>generate()} disabled={!selectedImage||isProcessing}><Ionicons name="color-wand" size={20} color={Colors.text} /><Text style={s.gt}>{isProcessing?'处理中...':''}</Text></TouchableOpacity>
+        {!resultUrl && <View style={s.dc}><Ionicons name="water" size={24} color={Colors.primary} /><View style={{flex:1}}><Text style={s.dt}>丝滑秀发效果</Text><Text style={s.de}>AI 智能柔顺发丝，打造丝滑质感</Text></View></View>}
+        <TouchableOpacity style={[s.gb,(!selectedImage||isProcessing)&&s.gbd]} onPress={()=>generate()} disabled={!selectedImage||isProcessing}><Ionicons name="color-wand" size={20} color={Colors.text} /><Text style={s.gt}>{isProcessing?'处理中...':'生成'}</Text></TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );

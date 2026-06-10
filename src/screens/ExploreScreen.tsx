@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import {
-  View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView,
+  View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, TextInput,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, FontSize, FontWeight, Spacing, BorderRadius } from '../theme';
 
@@ -16,18 +17,41 @@ const EXPLORE_ITEMS = [
 ];
 
 export default function ExploreScreen() {
+  const navigation = useNavigation<any>();
   const [activeTab, setActiveTab] = useState('最近');
   const [activeFilter, setActiveFilter] = useState('热门');
+  const [searchVisible, setSearchVisible] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>探索</Text>
-        <TouchableOpacity activeOpacity={0.7}>
+        <TouchableOpacity
+          activeOpacity={0.7}
+          onPress={() => setSearchVisible(!searchVisible)}
+        >
           <Ionicons name="search" size={22} color={Colors.text} />
         </TouchableOpacity>
       </View>
+
+      {/* Search Bar (toggle) */}
+      {searchVisible && (
+        <View style={styles.searchBarWrap}>
+          <TextInput
+            style={styles.searchInput}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholder="搜索视频模板..."
+            placeholderTextColor={Colors.textDark}
+            autoFocus
+          />
+          <TouchableOpacity onPress={() => { setSearchVisible(false); setSearchQuery(''); }}>
+            <Ionicons name="close-circle" size={20} color={Colors.textMuted} />
+          </TouchableOpacity>
+        </View>
+      )}
 
       {/* Top Tabs */}
       <View style={styles.tabRow}>
@@ -47,7 +71,11 @@ export default function ExploreScreen() {
 
       <ScrollView contentContainerStyle={styles.content}>
         {/* 图片转视频板块 */}
-        <View style={styles.featureCard}>
+        <TouchableOpacity
+          style={styles.featureCard}
+          activeOpacity={0.7}
+          onPress={() => navigation.navigate('CustomVideoScreen')}
+        >
           <View style={styles.featureInfo}>
             <Text style={styles.featureTitle}>图片转视频</Text>
             <Text style={styles.featureSub}>为您的照片注入动感</Text>
@@ -55,10 +83,14 @@ export default function ExploreScreen() {
           <View style={styles.featureIconBox}>
             <Ionicons name="play-circle" size={36} color={Colors.primary} />
           </View>
-        </View>
+        </TouchableOpacity>
 
         {/* 搜索视频 */}
-        <TouchableOpacity style={styles.searchCard} activeOpacity={0.7}>
+        <TouchableOpacity
+          style={styles.searchCard}
+          activeOpacity={0.7}
+          onPress={() => setSearchVisible(true)}
+        >
           <Ionicons name="search" size={20} color={Colors.textMuted} />
           <Text style={styles.searchPlaceholder}>搜索视频...</Text>
         </TouchableOpacity>
@@ -87,7 +119,12 @@ export default function ExploreScreen() {
         {/* 模板网格 */}
         <View style={styles.grid}>
           {EXPLORE_ITEMS.map((item) => (
-            <TouchableOpacity key={item.id} style={styles.gridCard} activeOpacity={0.7}>
+            <TouchableOpacity
+              key={item.id}
+              style={styles.gridCard}
+              activeOpacity={0.7}
+              onPress={() => navigation.navigate('CustomVideoScreen')}
+            >
               <View style={styles.gridImage}>
                 <Ionicons name="videocam" size={32} color={Colors.textMuted} />
               </View>
@@ -113,6 +150,17 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.md,
   },
   headerTitle: { fontSize: FontSize['2xl'], fontWeight: FontWeight.bold, color: Colors.text },
+
+  searchBarWrap: {
+    flexDirection: 'row', alignItems: 'center',
+    paddingHorizontal: Spacing.xl, marginBottom: Spacing.md,
+  },
+  searchInput: {
+    flex: 1, backgroundColor: Colors.card, borderRadius: BorderRadius.full,
+    paddingHorizontal: Spacing.lg, paddingVertical: Spacing.sm,
+    color: Colors.text, fontSize: FontSize.base,
+    marginRight: Spacing.sm,
+  },
 
   tabRow: {
     flexDirection: 'row',

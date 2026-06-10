@@ -12,6 +12,8 @@ type Route = RouteProp<RootStackParamList, 'AIToolDetailScreen'>;
 interface ToolItem {
   name: string;
   description: string;
+  screen?: string;
+  toolType?: string;
 }
 
 const COLLECTION_DATA: Record<string, { title: string; icon: string; tools: ToolItem[] }> = {
@@ -19,62 +21,62 @@ const COLLECTION_DATA: Record<string, { title: string; icon: string; tools: Tool
     title: 'Freeze The Moment',
     icon: 'snow',
     tools: [
-      { name: '瞬间定格', description: '捕捉动态瞬间，冻结时间之美' },
-      { name: '动态捕捉', description: '智能追踪运动轨迹' },
-      { name: '时间凝固', description: '创造超现实定格效果' },
+      { name: '瞬间定格', description: '捕捉动态瞬间，冻结时间之美', screen: 'HDRepairScreen' },
+      { name: '动态捕捉', description: '智能追踪运动轨迹', screen: 'CustomVideoScreen' },
+      { name: '时间凝固', description: '创造超现实定格效果', screen: 'CustomVideoScreen' },
     ],
   },
   ai_body: {
     title: 'AI Body',
     icon: 'body',
     tools: [
-      { name: 'Slim Thick', description: '自然纤体塑形' },
-      { name: 'Apple Shape', description: '苹果型身材优化' },
-      { name: 'Athletic', description: '运动型线条塑造' },
-      { name: 'Hourglass', description: '沙漏型曲线调整' },
+      { name: 'Slim Thick', description: '自然纤体塑形', screen: 'HDReshapeScreen', toolType: 'reshape' },
+      { name: 'Apple Shape', description: '苹果型身材优化', screen: 'HDReshapeScreen', toolType: 'reshape' },
+      { name: 'Athletic', description: '运动型线条塑造', screen: 'MuscleScreen', toolType: 'muscle' },
+      { name: 'Hourglass', description: '沙漏型曲线调整', screen: 'ProportionScreen', toolType: 'proportion' },
     ],
   },
   street: {
     title: 'Street Race',
     icon: 'car-sport',
     tools: [
-      { name: 'Outdoor Road', description: '户外公路场景' },
-      { name: 'Night Light', description: '夜色灯光特效' },
-      { name: 'Street Racer', description: '街头赛车风格' },
-      { name: 'Race Scene', description: '赛道竞速场景' },
+      { name: 'Outdoor Road', description: '户外公路场景', screen: 'FilterScreen' },
+      { name: 'Night Light', description: '夜色灯光特效', screen: 'FilterScreen' },
+      { name: 'Street Racer', description: '街头赛车风格', screen: 'FilterScreen' },
+      { name: 'Race Scene', description: '赛道竞速场景', screen: 'FilterScreen' },
     ],
   },
   true_skin: {
     title: 'True Skin Series',
     icon: 'rose',
     tools: [
-      { name: 'Soft Matte 01', description: '柔雾哑光肤感' },
-      { name: 'Natural 01', description: '自然清透肤感' },
+      { name: 'Soft Matte 01', description: '柔雾哑光肤感', screen: 'BeautyScreen', toolType: 'beauty' },
+      { name: 'Natural 01', description: '自然清透肤感', screen: 'BeautyScreen', toolType: 'beauty' },
     ],
   },
   evening: {
     title: 'Evening Wear',
     icon: 'shirt',
     tools: [
-      { name: 'Crimson Elegance Gown', description: '深红优雅晚礼服' },
-      { name: 'Elegant Bow Ensemble', description: '蝴蝶结优雅套装' },
-      { name: 'Black Ballet Chic', description: '黑色芭蕾时尚风' },
-      { name: 'Classic Body Dress', description: '经典修身连衣裙' },
+      { name: 'Crimson Elegance Gown', description: '深红优雅晚礼服', screen: 'AIEditScreen' },
+      { name: 'Elegant Bow Ensemble', description: '蝴蝶结优雅套装', screen: 'AIEditScreen' },
+      { name: 'Black Ballet Chic', description: '黑色芭蕾时尚风', screen: 'AIEditScreen' },
+      { name: 'Classic Body Dress', description: '经典修身连衣裙', screen: 'AIEditScreen' },
     ],
   },
   holiday: {
     title: 'The Holiday Edi',
     icon: 'gift',
     tools: [
-      { name: '节日主题特效', description: '节日氛围滤镜' },
-      { name: '圣诞魔法', description: '圣诞主题特效' },
-      { name: '新年光彩', description: '新年璀璨效果' },
+      { name: '节日主题特效', description: '节日氛围滤镜', screen: 'FilterScreen' },
+      { name: '圣诞魔法', description: '圣诞主题特效', screen: 'FilterScreen' },
+      { name: '新年光彩', description: '新年璀璨效果', screen: 'FilterScreen' },
     ],
   },
 };
 
 export default function AIToolDetailScreen() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>();
   const route = useRoute<Route>();
   const collectionKey = route.params?.collectionKey || 'freeze';
   const data = COLLECTION_DATA[collectionKey];
@@ -116,7 +118,16 @@ export default function AIToolDetailScreen() {
 
         {/* 工具列表 */}
         {data.tools.map((tool, i) => (
-          <TouchableOpacity key={i} style={styles.toolCard} activeOpacity={0.7}>
+          <TouchableOpacity
+            key={i}
+            style={styles.toolCard}
+            activeOpacity={0.7}
+            onPress={() => {
+              if (tool.screen) {
+                navigation.navigate(tool.screen);
+              }
+            }}
+          >
             <View style={styles.toolImage}>
               <Ionicons name="sparkles" size={28} color={Colors.primary} />
             </View>
@@ -124,7 +135,15 @@ export default function AIToolDetailScreen() {
               <Text style={styles.toolName}>{tool.name}</Text>
               <Text style={styles.toolDesc}>{tool.description}</Text>
             </View>
-            <TouchableOpacity style={styles.tryBtn} activeOpacity={0.7}>
+            <TouchableOpacity
+              style={styles.tryBtn}
+              activeOpacity={0.7}
+              onPress={() => {
+                if (tool.screen) {
+                  navigation.navigate(tool.screen);
+                }
+              }}
+            >
               <Text style={styles.tryBtnText}>试用</Text>
             </TouchableOpacity>
           </TouchableOpacity>

@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -7,7 +7,7 @@ import { useAiTool } from '../../hooks/useAiTool';
 
 export default function HairSmoothScreen() {
   const n = useNavigation();
-  const { selectedImage, isProcessing, resultUrl, error, pickImage, takePhoto, generate, clear } = useAiTool('hair_smooth');
+  const { selectedImage, isProcessing, resultUrl, error, taskError, pickImage, takePhoto, generate, clear } = useAiTool('hair_smooth');
 
   return (
     <SafeAreaView style={s.c}>

@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, ActivityIndicator,
+  View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, ActivityIndicator, Alert,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -8,6 +8,17 @@ import { Colors, FontSize, FontWeight, Spacing, BorderRadius, Shadow } from '../
 
 export default function SubscriptionScreen() {
   const navigation = useNavigation();
+
+  const handleSubscribe = () => {
+    Alert.alert('订阅确认', 'Pro Annual — US$29.99/年', [
+      { text: '取消', style: 'cancel' },
+      { text: '确认订阅', onPress: () => Alert.alert('提示', '支付功能将于后续版本开放') },
+    ]);
+  };
+
+  const handleRestore = () => {
+    Alert.alert('恢复购买', '正在检查您的购买记录...');
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -20,7 +31,7 @@ export default function SubscriptionScreen() {
           <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.7}>
             <Ionicons name="close" size={24} color={Colors.textMuted} />
           </TouchableOpacity>
-          <TouchableOpacity activeOpacity={0.7}>
+          <TouchableOpacity onPress={handleRestore} activeOpacity={0.7}>
             <Text style={styles.restoreText}>恢复购买</Text>
           </TouchableOpacity>
         </View>
@@ -95,7 +106,7 @@ export default function SubscriptionScreen() {
         </View>
 
         {/* 订阅按钮 */}
-        <TouchableOpacity style={styles.subscribeBtn} activeOpacity={0.8}>
+        <TouchableOpacity style={styles.subscribeBtn} activeOpacity={0.8} onPress={handleSubscribe}>
           <Ionicons name="lock-closed" size={18} color={Colors.text} />
           <Text style={styles.subscribeBtnText}>订阅</Text>
         </TouchableOpacity>

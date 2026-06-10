@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -12,7 +12,7 @@ const HAIR_COLORS = [
 
 export default function HairDyeScreen() {
   const n = useNavigation();
-  const { selectedImage, isProcessing, resultUrl, error, pickImage, takePhoto, generate, clear } = useAiTool('hair_dye');
+  const { selectedImage, isProcessing, resultUrl, error, taskError, pickImage, takePhoto, generate, clear } = useAiTool('hair_dye');
   const [selectedColor, setSelectedColor] = useState('Pink');
   return (
     <SafeAreaView style={s.c}>

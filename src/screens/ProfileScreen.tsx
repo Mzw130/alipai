@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView,
+  View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, Alert,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -11,10 +11,10 @@ import { RootStackParamList } from '../navigation/AppNavigator';
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
 const MENU_ITEMS = [
-  { icon: 'diamond', label: 'Pro 会员', color: Colors.proGold, screen: 'ProMembershipScreen' as const },
-  { icon: 'folder-open', label: '我的素材', color: Colors.primary, screen: 'MaterialLibraryScreen' as const },
-  { icon: 'settings', label: '设置', color: Colors.textSecondary, screen: null },
-  { icon: 'information-circle', label: '关于', color: Colors.textSecondary, screen: null },
+  { icon: 'diamond', label: 'Pro 会员', color: Colors.proGold, screen: 'ProMembershipScreen' as const, action: null as null | string },
+  { icon: 'folder-open', label: '我的素材', color: Colors.primary, screen: 'MaterialLibraryScreen' as const, action: null as null | string },
+  { icon: 'settings', label: '设置', color: Colors.textSecondary, screen: null, action: 'settings' },
+  { icon: 'information-circle', label: '关于', color: Colors.textSecondary, screen: null, action: 'about' },
 ];
 
 export default function ProfileScreen() {
@@ -70,7 +70,13 @@ export default function ProfileScreen() {
               key={i}
               style={[styles.menuItem, i < MENU_ITEMS.length - 1 && styles.menuItemBorder]}
               onPress={() => {
-                if (item.screen) navigation.navigate(item.screen as any);
+                if (item.screen) {
+                  navigation.navigate(item.screen as any);
+                } else if (item.action === 'settings') {
+                  Alert.alert('设置', '设置功能开发中');
+                } else if (item.action === 'about') {
+                  Alert.alert('关于 ClipAI', 'ClipAI v1.0.0\nAI 驱动的图片/视频编辑应用\n\n基于 React Native + Expo 构建');
+                }
               }}
               activeOpacity={0.7}
             >

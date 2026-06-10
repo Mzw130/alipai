@@ -84,7 +84,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
 
   // 轮询异步任务
   const pollTask = useCallback(async (taskId: string, toolType: string) => {
-    const maxAttempts = 120; // 最多轮询 2 分钟
+    const maxAttempts = 200; // 最多轮询约 6.6 分钟（后端最多 5 分钟）
     let attempts = 0;
 
     const poll = async () => {
@@ -97,14 +97,15 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
 
       try {
         const result = await getTaskStatus(taskId);
-        if (!result) return;
-
-        const progress = Math.min(90, attempts * 3); // 模拟进度
+        if (!result) {
+          // 结果为空，继续轮询
+          pollingRef.current.set(taskId, setTimeout(poll, 2000));
+          return;
+        }
 
         if (result.status === 'completed') {
           updateTask(taskId, {
             status: 'completed',
-            progress: 100,
             resultUrl: result.result_url ?? undefined,
             processingTimeMs: (result as any).processing_time_ms,
             creditsUsed: (result as any).credits_used,
@@ -118,15 +119,15 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
         } else if (result.status === 'failed') {
           updateTask(taskId, {
             status: 'failed',
-            progress,
             errorMessage: result.error_message || '处理失败',
           });
           pollingRef.current.delete(taskId);
         } else {
-          updateTask(taskId, { progress });
+          // 仍为 processing / queued / running → 继续
           pollingRef.current.set(taskId, setTimeout(poll, 2000));
         }
       } catch {
+        // 网络错误不中断轮询
         pollingRef.current.set(taskId, setTimeout(poll, 2000));
       }
     };
@@ -158,7 +159,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
 
     try {
       // 上传中
-      updateTask(taskId, { progress: 10 });
+      updateTask(taskId, {});
 
       const result = await enhanceImage({
         toolType,
@@ -173,7 +174,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
 
       if (result.status === 'processing') {
         // 异步任务 — 开始轮询
-        updateTask(taskId, { status: 'processing', progress: 20 });
+        updateTask(taskId, { status: 'processing' });
         pollTask(result.task_id, toolType);
         return taskId;
       }
@@ -181,7 +182,6 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
       // 同步完成
       updateTask(taskId, {
         status: 'completed',
-        progress: 100,
         resultUrl: result.result_url,
         processingTimeMs: result.processing_time_ms,
         creditsUsed: result.credits_used,

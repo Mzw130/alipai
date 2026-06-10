@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -7,7 +7,7 @@ import { useAiTool } from '../../hooks/useAiTool';
 
 export default function SuperRealisticScreen() {
   const n = useNavigation();
-  const { selectedImage, isProcessing, result, error, pickImage, takePhoto, generate, clear } = useAiTool('super_realistic');
+  const { selectedImage, isProcessing, result, error, taskError, pickImage, takePhoto, generate, clear } = useAiTool('super_realistic');
 
   return (
     <SafeAreaView style={s.container}>

@@ -120,13 +120,21 @@ export default function HomeScreen() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>推荐模板</Text>
-            <TouchableOpacity activeOpacity={0.7}>
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => navigation.navigate('ExploreTab' as any)}
+            >
               <Text style={styles.viewAll}>查看全部</Text>
             </TouchableOpacity>
           </View>
 
           {TEMPLATES.map((tpl) => (
-            <TouchableOpacity key={tpl.id} style={styles.templateCard} activeOpacity={0.7}>
+            <TouchableOpacity
+              key={tpl.id}
+              style={styles.templateCard}
+              activeOpacity={0.7}
+              onPress={() => navigation.navigate('CustomVideoScreen')}
+            >
               <View style={[styles.templateImage, { backgroundColor: tpl.color }]}>
                 <View style={styles.templateBadge}>
                   <Ionicons name="play" size={10} color={Colors.text} />
@@ -140,7 +148,11 @@ export default function HomeScreen() {
                 <Text style={styles.templateName}>{tpl.name}</Text>
                 <Text style={styles.templateDesc}>{tpl.desc}</Text>
               </View>
-              <TouchableOpacity style={styles.useBtn} activeOpacity={0.7}>
+              <TouchableOpacity
+                style={styles.useBtn}
+                activeOpacity={0.7}
+                onPress={() => navigation.navigate('CustomVideoScreen')}
+              >
                 <Ionicons name="color-wand" size={14} color={Colors.text} />
                 <Text style={styles.useBtnText}>使用</Text>
               </TouchableOpacity>

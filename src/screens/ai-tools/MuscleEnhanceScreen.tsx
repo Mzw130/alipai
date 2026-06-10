@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -14,7 +14,7 @@ const styles_list = [
 
 export default function MuscleEnhanceScreen() {
   const n = useNavigation();
-  const { selectedImage, isProcessing, resultUrl, error, pickImage, takePhoto, generate, clear } = useAiTool('muscle_enhance');
+  const { selectedImage, isProcessing, resultUrl, error, taskError, pickImage, takePhoto, generate, clear } = useAiTool('muscle_enhance');
   const [selectedStyle, setSelectedStyle] = useState<string|null>(null);
   return (
     <SafeAreaView style={s.c}>

@@ -11,6 +11,34 @@ const API_BASE_URL = __DEV__
   ? 'http://localhost:3000/api/v1'
   : 'https://api.clipai.com/api/v1';
 
+// 开发模式自动登录
+const DEV_PHONE = '13800138000';
+const DEV_CODE = '123456';
+let autoLoginPromise: Promise<void> | null = null;
+
+async function ensureAuth(): Promise<void> {
+  if (authToken) return;
+  if (!autoLoginPromise) {
+    autoLoginPromise = (async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/auth/verify`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone: DEV_PHONE, code: DEV_CODE }),
+        });
+        const json = await res.json();
+        if (json.code === 0 && json.data?.token) {
+          authToken = json.data.token;
+          console.log('[API] 自动登录成功, userId:', json.data.user?.id);
+        }
+      } catch (e) {
+        console.error('[API] 自动登录失败:', e);
+      }
+    })();
+  }
+  await autoLoginPromise;
+}
+
 // ==================== 通用请求工具 ====================
 interface ApiResponse<T = any> {
   code: number;
@@ -39,6 +67,11 @@ async function request<T>(
     timeout?: number;
   },
 ): Promise<ApiResponse<T>> {
+  // 自动登录（auth 端点自身跳过，避免死循环）
+  if (!path.startsWith('/auth/')) {
+    await ensureAuth();
+  }
+
   const url = `${API_BASE_URL}${path}`;
 
   const headers: Record<string, string> = {
@@ -184,22 +217,14 @@ export interface EnhanceResult {
 export async function enhanceImage(params: EnhanceParams): Promise<EnhanceResult | null> {
   const formData = new FormData();
 
-  // 处理图片 URI (file:// 或 content://)
-  if (params.imageUri.startsWith('file://') || params.imageUri.startsWith('content://') || params.imageUri.startsWith('/')) {
-    formData.append('image', {
-      uri: params.imageUri,
-      type: 'image/jpeg',
-      name: 'image.jpg',
-    } as any);
-  } else if (params.imageUri.startsWith('data:')) {
-    // base64 data URL — 直接传 URI
-    formData.append('image', {
-      uri: params.imageUri,
-      type: 'image/png',
-      name: 'image.png',
-    } as any);
-  } else {
-    // 远程 URL
+  // 处理图片: Web 端需要先 fetch 成 Blob，原生端直接用 uri
+  try {
+    const response = await fetch(params.imageUri);
+    const blob = await response.blob();
+    const ext = blob.type === 'image/png' ? 'png' : 'jpg';
+    (formData as any).append('image', blob, `image.${ext}`);
+  } catch {
+    // fallback: 原生端用 uri 格式
     formData.append('image', {
       uri: params.imageUri,
       type: 'image/jpeg',

@@ -17,6 +17,7 @@ const TOOLS: Tool[] = [
   { key: 'obj_remove', label: '物体消除', icon: 'remove-circle', screen: 'ObjectRemovalScreen', color: '#F87171' },
   { key: 'bg_remove', label: '背景移除', icon: 'layers', screen: 'BackgroundRemovalScreen', color: '#4ADE80' },
   { key: 'realistic', label: '超级写实', icon: 'star', screen: 'SuperRealisticScreen', color: '#FBBF24' },
+  { key: 'beauty', label: '美颜', icon: 'happy', screen: 'BeautyScreen', color: '#FB7185' },
   { key: 'hair_dye', label: '染发', icon: 'color-palette', screen: 'HairDyeScreen', color: '#F472B6' },
   { key: 'lip_plump', label: '丰唇', icon: 'rose', screen: 'LipPlumpScreen', color: '#FB7185' },
   { key: 'jawline', label: '下颌轮廓', icon: 'body', screen: 'JawlineScreen', color: '#A78BFA' },
@@ -26,6 +27,8 @@ const TOOLS: Tool[] = [
   { key: 'leg_enhance', label: '丰腿', icon: 'fitness', screen: 'LegEnhanceScreen', color: '#F59E0B' },
   { key: 'muscle', label: '肌肉', icon: 'barbell', screen: 'MuscleScreen', color: '#EF4444' },
   { key: 'muscle_enhance', label: '肌肉增强', icon: 'flash', screen: 'MuscleEnhanceScreen', color: '#EC4899' },
+  { key: 'color_grade', label: '调色', icon: 'contrast', screen: 'ColorGradeScreen', color: '#38BDF8' },
+  { key: 'filter', label: '滤镜', icon: 'filter', screen: 'FilterScreen', color: '#A78BFA' },
   { key: 'ai_edit', label: 'AI编辑', icon: 'color-wand', screen: 'AIEditScreen', color: '#8B5CF6' },
 ];
 

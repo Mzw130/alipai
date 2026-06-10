@@ -1,22 +1,41 @@
 import React, { useState } from 'react';
 import {
-  View, Text, StyleSheet, SafeAreaView, TouchableOpacity, TextInput, ScrollView,
+  View, Text, StyleSheet, SafeAreaView, TouchableOpacity, TextInput, ScrollView, Image, Alert,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, FontSize, FontWeight, Spacing, BorderRadius, Shadow } from '../theme';
+import { useAiTool } from '../hooks/useAiTool';
 
 const MODES = ['超级', '自定义'];
 const TEMPLATES = [
-  { id: '1', name: 'Flower Gift' },
-  { id: '2', name: 'Skirt Twirl' },
-  { id: '3', name: 'Playful Smile' },
+  { id: '1', name: 'Flower Gift', prompt: 'Flower Gift 风格视频' },
+  { id: '2', name: 'Skirt Twirl', prompt: 'Skirt Twirl 风格视频' },
+  { id: '3', name: 'Playful Smile', prompt: 'Playful Smile 风格视频' },
 ];
 
 export default function CustomVideoScreen() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>();
   const [activeMode, setActiveMode] = useState('自定义');
   const [prompt, setPrompt] = useState('');
+  const { selectedImage, isProcessing, resultUrl, result, error, taskError, pickImage, takePhoto, generate, clear } = useAiTool('video_generate');
+
+  // 防止重复点击
+  const [submitting, setSubmitting] = useState(false);
+  const busy = isProcessing || submitting;
+
+  const handleGenerate = async () => {
+    if (busy || !selectedImage) return;
+    setSubmitting(true);
+    try {
+      await generate({
+        mode: activeMode === '超级' ? 'super' : 'custom',
+        prompt: prompt || undefined,
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -26,18 +45,51 @@ export default function CustomVideoScreen() {
           <Ionicons name="chevron-back" size={24} color={Colors.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>自定义视频</Text>
-        <TouchableOpacity activeOpacity={0.7}>
+        <TouchableOpacity
+          activeOpacity={0.7}
+          onPress={() => Alert.alert('设置', '视频生成设置')}
+        >
           <Ionicons name="settings-outline" size={24} color={Colors.text} />
         </TouchableOpacity>
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
         {/* 选择图片 */}
-        <TouchableOpacity style={styles.imagePicker} activeOpacity={0.7}>
-          <Ionicons name="images" size={36} color={Colors.primary} />
-          <Text style={styles.imagePickerText}>选择图片</Text>
-          <Text style={styles.imagePickerSub}>从相册选取素材</Text>
+        <TouchableOpacity style={styles.imagePicker} activeOpacity={0.7} onPress={pickImage}>
+          {selectedImage ? (
+            <Image source={{ uri: selectedImage }} style={styles.previewImage} />
+          ) : (
+            <>
+              <Ionicons name="images" size={36} color={Colors.primary} />
+              <Text style={styles.imagePickerText}>选择图片</Text>
+              <Text style={styles.imagePickerSub}>从相册选取素材</Text>
+            </>
+          )}
         </TouchableOpacity>
+
+        {/* Error */}
+        {error && (
+          <View style={styles.errorCard}>
+            <Ionicons name="alert-circle" size={18} color={Colors.error} />
+            <Text style={styles.errorText}>{error}</Text>
+          </View>
+        )}
+
+        {/* Task Error (后端返回) */}
+        {taskError && (
+          <View style={styles.errorCard}>
+            <Ionicons name="close-circle" size={18} color={Colors.error} />
+            <Text style={styles.errorText}>{taskError}</Text>
+          </View>
+        )}
+
+        {/* Result */}
+        {resultUrl && (
+          <View style={styles.resultCard}>
+            <Text style={styles.resultTitle}>✨ 视频生成完成</Text>
+            <Text style={styles.resultMeta}>视频结果已保存到素材库</Text>
+          </View>
+        )}
 
         {/* 模式选择 */}
         <View style={styles.modeRow}>
@@ -60,7 +112,15 @@ export default function CustomVideoScreen() {
           <Text style={styles.sectionTitle}>案例模板</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             {TEMPLATES.map((tpl) => (
-              <TouchableOpacity key={tpl.id} style={styles.templateCard} activeOpacity={0.7}>
+              <TouchableOpacity
+                key={tpl.id}
+                style={styles.templateCard}
+                activeOpacity={0.7}
+                onPress={() => {
+                  setPrompt(tpl.prompt);
+                  if (!selectedImage) pickImage();
+                }}
+              >
                 <View style={styles.templateImage}>
                   <Ionicons name="play-circle" size={28} color={Colors.primary} />
                 </View>
@@ -86,13 +146,22 @@ export default function CustomVideoScreen() {
 
         {/* 操作按钮 */}
         <View style={styles.actionRow}>
-          <TouchableOpacity style={styles.upgradeBtn} activeOpacity={0.7}>
+          <TouchableOpacity
+            style={styles.upgradeBtn}
+            activeOpacity={0.7}
+            onPress={() => navigation.navigate('ProMembershipScreen')}
+          >
             <Ionicons name="flash" size={18} color={Colors.bg} />
             <Text style={styles.upgradeText}>升级</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.generateBtn} activeOpacity={0.8}>
+          <TouchableOpacity
+            style={[styles.generateBtn, busy && styles.generateBtnDisabled]}
+            activeOpacity={0.8}
+            onPress={handleGenerate}
+            disabled={busy}
+          >
             <Ionicons name="color-wand" size={18} color={Colors.text} />
-            <Text style={styles.generateText}>生成</Text>
+            <Text style={styles.generateText}>{busy ? '处理中...' : '生成'}</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -122,6 +191,13 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
     borderStyle: 'dashed',
     marginBottom: Spacing.xl,
+    minHeight: 160,
+    justifyContent: 'center',
+  },
+  previewImage: {
+    width: '100%',
+    height: 200,
+    borderRadius: BorderRadius.md,
   },
   imagePickerText: { fontSize: FontSize.md, color: Colors.primary, fontWeight: FontWeight.medium },
   imagePickerSub: { fontSize: FontSize.sm, color: Colors.textMuted },
@@ -176,6 +252,7 @@ const styles = StyleSheet.create({
     fontSize: FontSize.base,
     borderWidth: 1,
     borderColor: Colors.border,
+    marginBottom: Spacing.xs,
   },
 
   actionRow: {
@@ -204,5 +281,30 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.base,
     ...Shadow.button,
   },
+  generateBtnDisabled: {
+    opacity: 0.5,
+  },
   generateText: { fontSize: FontSize.base, fontWeight: FontWeight.semibold, color: Colors.text },
+
+  errorCard: {
+    backgroundColor: Colors.error + '15',
+    borderRadius: BorderRadius.md,
+    padding: Spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    marginBottom: Spacing.xl,
+  },
+  errorText: { fontSize: FontSize.sm, color: Colors.error, flex: 1 },
+
+  resultCard: {
+    backgroundColor: Colors.card,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.lg,
+    marginBottom: Spacing.xl,
+    borderWidth: 1,
+    borderColor: Colors.success + '40',
+  },
+  resultTitle: { fontSize: FontSize.lg, fontWeight: FontWeight.bold, color: Colors.success, marginBottom: Spacing.sm },
+  resultMeta: { fontSize: FontSize.xs, color: Colors.textMuted, textAlign: 'center' },
 });

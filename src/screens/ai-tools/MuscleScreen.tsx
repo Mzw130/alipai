@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -13,7 +13,7 @@ const parts = [
 
 export default function MuscleScreen() {
   const n = useNavigation();
-  const { selectedImage, isProcessing, resultUrl, error, pickImage, takePhoto, generate, clear } = useAiTool('muscle');
+  const { selectedImage, isProcessing, resultUrl, error, taskError, pickImage, takePhoto, generate, clear } = useAiTool('muscle');
   const [selectedPart, setSelectedPart] = useState<string|null>(null);
   return (
     <SafeAreaView style={s.c}>

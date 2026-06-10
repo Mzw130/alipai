@@ -6,6 +6,8 @@ import {
   SafeAreaView,
   TouchableOpacity,
   ScrollView,
+  Alert,
+  Linking,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -100,15 +102,37 @@ export default function ProMembershipScreen() {
         </View>
 
         {/* 继续按钮 */}
-        <TouchableOpacity style={styles.continueBtn} activeOpacity={0.8}>
+        <TouchableOpacity
+          style={styles.continueBtn}
+          activeOpacity={0.8}
+          onPress={() => {
+            const plan = PLANS.find(p => p.id === selectedPlan);
+            Alert.alert('订阅确认', `已选择 ${plan?.title} 方案`, [
+              { text: '取消', style: 'cancel' },
+              { text: '确认订阅', onPress: () => Alert.alert('提示', '支付功能将于后续版本开放') },
+            ]);
+          }}
+        >
           <Text style={styles.continueText}>继续</Text>
         </TouchableOpacity>
 
         {/* 底部说明 */}
-        <Text style={styles.footerText}>
-          订阅自动续期，可随时取消{'\n'}
-          条款 · 隐私政策 · 恢复购买
-        </Text>
+        <View style={styles.footerWrap}>
+          <Text style={styles.footerText}>订阅自动续期，可随时取消</Text>
+          <View style={styles.footerLinks}>
+            <TouchableOpacity onPress={() => Alert.alert('条款', '服务条款')}>
+              <Text style={styles.footerLink}>条款</Text>
+            </TouchableOpacity>
+            <Text style={styles.footerSeparator}>·</Text>
+            <TouchableOpacity onPress={() => Alert.alert('隐私', '隐私政策')}>
+              <Text style={styles.footerLink}>隐私政策</Text>
+            </TouchableOpacity>
+            <Text style={styles.footerSeparator}>·</Text>
+            <TouchableOpacity onPress={() => Alert.alert('恢复', '正在恢复购买...')}>
+              <Text style={styles.footerLink}>恢复购买</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -246,11 +270,27 @@ const styles = StyleSheet.create({
   },
 
   // Footer
+  footerWrap: {
+    alignItems: 'center',
+    marginTop: Spacing.lg,
+    gap: Spacing.sm,
+  },
   footerText: {
     fontSize: FontSize.sm,
     color: Colors.textMuted,
     textAlign: 'center',
-    marginTop: Spacing.lg,
-    lineHeight: 20,
+  },
+  footerLinks: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+  },
+  footerLink: {
+    fontSize: FontSize.sm,
+    color: Colors.primary,
+  },
+  footerSeparator: {
+    fontSize: FontSize.sm,
+    color: Colors.textMuted,
   },
 });

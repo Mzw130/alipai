@@ -1,12 +1,12 @@
 /**
  * 加载进度覆盖层
- * 显示 AI 处理进度条，可最小化到后台
+ * 显示 AI 处理状态，可最小化到后台
  */
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, Animated, TouchableOpacity, Modal } from 'react-native';
+import { View, Text, StyleSheet, Animated, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, FontSize, FontWeight, Spacing, BorderRadius, Shadow } from '../theme';
-import { useTaskContext, AITask } from '../store/TaskContext';
+import { useTaskContext } from '../store/TaskContext';
 
 const TOOL_LABELS: Record<string, string> = {
   reshape: '重塑', hd_repair: '高清修复', obj_remove: '物体消除',
@@ -22,13 +22,11 @@ export default function LoadingOverlay() {
   const { activeTask, clearActiveTask } = useTaskContext();
   const [minimized, setMinimized] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const progressAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (activeTask && (activeTask.status === 'uploading' || activeTask.status === 'processing')) {
       Animated.timing(fadeAnim, { toValue: 1, duration: 300, useNativeDriver: true }).start();
     } else if (activeTask?.status === 'completed' || activeTask?.status === 'failed') {
-      // 自动隐藏完成/失败任务
       const timer = setTimeout(() => {
         Animated.timing(fadeAnim, { toValue: 0, duration: 500, useNativeDriver: true }).start();
         setTimeout(clearActiveTask, 600);
@@ -36,16 +34,6 @@ export default function LoadingOverlay() {
       return () => clearTimeout(timer);
     }
   }, [activeTask?.status, activeTask?.id]);
-
-  useEffect(() => {
-    if (activeTask) {
-      Animated.timing(progressAnim, {
-        toValue: activeTask.progress / 100,
-        duration: 400,
-        useNativeDriver: false,
-      }).start();
-    }
-  }, [activeTask?.progress]);
 
   if (!activeTask) return null;
 
@@ -56,17 +44,11 @@ export default function LoadingOverlay() {
     : activeTask.status === 'completed' ? '✅ 完成!'
     : '❌ 失败';
 
-  const progressWidth = progressAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0%', '100%'],
-  });
-
   if (minimized && isRunning) {
     return (
       <TouchableOpacity style={styles.miniBar} onPress={() => setMinimized(false)} activeOpacity={0.8}>
-        <Animated.View style={[styles.miniProgress, { width: progressWidth as any }]} />
         <Ionicons name="sparkles" size={14} color={Colors.primary} />
-        <Text style={styles.miniText}>{label} {activeTask.progress}%</Text>
+        <Text style={styles.miniText}>{label} · 处理中</Text>
         <Text style={styles.miniHint}>点击查看</Text>
       </TouchableOpacity>
     );
@@ -92,20 +74,7 @@ export default function LoadingOverlay() {
           )}
         </View>
 
-        {/* 进度条 */}
-        <View style={styles.progressBar}>
-          <Animated.View style={[styles.progressFill, {
-            width: progressWidth as any,
-            backgroundColor: activeTask.status === 'failed' ? Colors.error
-              : activeTask.status === 'completed' ? Colors.success
-              : Colors.primary,
-          }]} />
-        </View>
-
-        <View style={styles.statusRow}>
-          <Text style={styles.statusText}>{statusText}</Text>
-          <Text style={styles.progressText}>{activeTask.progress}%</Text>
-        </View>
+        <Text style={styles.statusText}>{statusText}</Text>
 
         {activeTask.errorMessage && (
           <Text style={styles.errorMsg}>{activeTask.errorMessage}</Text>
@@ -138,30 +107,16 @@ const styles = StyleSheet.create({
   },
   title: { fontSize: FontSize.md, fontWeight: FontWeight.semibold, color: Colors.text },
   minimizeBtn: { fontSize: FontSize.xs, color: Colors.primary, fontWeight: FontWeight.medium },
-  progressBar: {
-    height: 6, backgroundColor: Colors.border,
-    borderRadius: 3, overflow: 'hidden', marginBottom: Spacing.sm,
-  },
-  progressFill: { height: 6, borderRadius: 3 },
-  statusRow: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-  },
-  statusText: { fontSize: FontSize.sm, color: Colors.textSecondary },
-  progressText: { fontSize: FontSize.sm, color: Colors.textMuted, fontWeight: FontWeight.medium },
+  statusText: { fontSize: FontSize.sm, color: Colors.textSecondary, marginBottom: Spacing.xs },
   errorMsg: { fontSize: FontSize.xs, color: Colors.error, marginTop: Spacing.sm },
   hintMsg: { fontSize: FontSize.xs, color: Colors.success, marginTop: Spacing.sm },
-  // 最小化
   miniBar: {
     position: 'absolute', top: 60, left: Spacing.xl, right: Spacing.xl,
     backgroundColor: '#1A1A2E', borderRadius: BorderRadius.full,
     paddingVertical: Spacing.sm, paddingHorizontal: Spacing.lg,
     flexDirection: 'row', alignItems: 'center', gap: Spacing.sm,
     borderWidth: 1, borderColor: Colors.primary + '40',
-    zIndex: 9999, overflow: 'hidden',
-  },
-  miniProgress: {
-    position: 'absolute', left: 0, top: 0, bottom: 0,
-    backgroundColor: Colors.primary + '20',
+    zIndex: 9999,
   },
   miniText: { fontSize: FontSize.xs, color: Colors.text, flex: 1 },
   miniHint: { fontSize: FontSize.xs, color: Colors.textMuted },

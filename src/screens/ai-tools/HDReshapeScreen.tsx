@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import {
   View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, Image,
 } from 'react-native';
@@ -9,7 +9,7 @@ import { useAiTool } from '../../hooks/useAiTool';
 
 export default function HDReshapeScreen() {
   const n = useNavigation();
-  const { selectedImage, isProcessing, resultUrl, error, pickImage, takePhoto, generate, clear } = useAiTool('reshape');
+  const { selectedImage, isProcessing, resultUrl, error, taskError, pickImage, takePhoto, generate, clear } = useAiTool('reshape');
 
   return (
     <SafeAreaView style={s.c}>

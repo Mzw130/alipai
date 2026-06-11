@@ -1,190 +1,119 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
-  View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, ActivityIndicator, Alert,
+  View, Text, StyleSheet, TouchableOpacity, Image, Dimensions, ActivityIndicator,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, FontSize, FontWeight, Spacing, BorderRadius, Shadow } from '../theme';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Colors, FontSize, FontWeight, Spacing, BorderRadius } from '../theme';
+
+const { height: SCREEN_H } = Dimensions.get('window');
 
 export default function SubscriptionScreen() {
   const navigation = useNavigation();
-
-  const handleSubscribe = () => {
-    Alert.alert('订阅确认', 'Pro Annual — US$29.99/年', [
-      { text: '取消', style: 'cancel' },
-      { text: '确认订阅', onPress: () => Alert.alert('提示', '支付功能将于后续版本开放') },
-    ]);
-  };
-
-  const handleRestore = () => {
-    Alert.alert('恢复购买', '正在检查您的购买记录...');
-  };
+  const [loading, setLoading] = useState(true);
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* 顶部拖拽条 */}
-      <View style={styles.dragBar} />
+    <View style={styles.container}>
+      <Image
+        source={require('../../assets/design/hero.jpeg')}
+        style={styles.heroImage}
+        resizeMode="cover"
+      />
+      <LinearGradient colors={['transparent', 'rgba(0,0,0,0.5)']} style={styles.heroFade} />
 
-      <ScrollView contentContainerStyle={styles.content}>
-        {/* 关闭 + 恢复购买 */}
-        <View style={styles.topRow}>
-          <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.7}>
-            <Ionicons name="close" size={24} color={Colors.textMuted} />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={handleRestore} activeOpacity={0.7}>
-            <Text style={styles.restoreText}>恢复购买</Text>
+      <TouchableOpacity style={styles.allPlansBtn} onPress={() => navigation.goBack()}>
+        <Text style={styles.allPlansText}>全部方案</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.closeBtn} onPress={() => navigation.goBack()}>
+        <Ionicons name="close" size={18} color="#fff" />
+      </TouchableOpacity>
+
+      {loading && (
+        <View style={styles.loadingBox}>
+          <ActivityIndicator size="large" color="#fff" />
+          <Text style={styles.loadingText}>正在加载中...</Text>
+        </View>
+      )}
+
+      <View style={styles.sheet}>
+        <View style={styles.sheetHeader}>
+          <Text style={styles.sheetTitle}>App Store</Text>
+          <TouchableOpacity onPress={() => navigation.goBack()}>
+            <Ionicons name="close-circle" size={24} color={Colors.textMuted} />
           </TouchableOpacity>
         </View>
 
-        {/* 加载状态 */}
-        <View style={styles.loadingSection}>
-          <ActivityIndicator size="large" color={Colors.primary} />
-          <Text style={styles.loadingText}>正在加载中</Text>
-        </View>
-
-        {/* App 信息卡片 */}
-        <View style={styles.appCard}>
-          <View style={styles.appIcon}>
-            <Ionicons name="color-wand" size={36} color={Colors.primary} />
-          </View>
-          <View style={styles.appInfo}>
-            <Text style={styles.appName}>ClipAI: AI Video Generator</Text>
-            <Text style={styles.appMeta}>App Store · 16+</Text>
-            <View style={styles.appRating}>
-              {[1, 2, 3, 4, 5].map((i) => (
-                <Ionicons key={i} name="star" size={12} color={Colors.proGold} />
-              ))}
-              <Text style={styles.ratingText}>4.8</Text>
+        <View style={styles.planCard}>
+          <View style={styles.planRow}>
+            <LinearGradient colors={[Colors.proGradientStart, Colors.proGradientEnd]} style={styles.appIcon}>
+              <Ionicons name="play" size={20} color="#fff" />
+            </LinearGradient>
+            <View style={styles.planInfo}>
+              <Text style={styles.planName}>Pro Annual</Text>
+              <Text style={styles.planApp}>ClipAI: AI Video Generator</Text>
+              <Text style={styles.planType}>订阅</Text>
             </View>
           </View>
+          <View style={styles.divider} />
+          <Text style={styles.price}>US$ 29.99/年</Text>
+          <Text style={styles.legal}>
+            在每个续期日期前至少一天，你可随时在"设置" &gt; "Apple 账户"中取消。方案将自动续期，直到取消为止。
+          </Text>
+          <Text style={styles.account}>账户: user@example.com</Text>
         </View>
 
-        {/* 订阅方案卡片 */}
-        <View style={styles.planCard}>
-          <View style={styles.planHeader}>
-            <Ionicons name="diamond" size={22} color={Colors.proGold} />
-            <Text style={styles.planTitle}>Pro Annual</Text>
-          </View>
-          <Text style={styles.planPrice}>US$ 29.99<Text style={styles.planPeriod}> / 年</Text></Text>
-
-          <View style={styles.divider} />
-
-          {/* 权益 */}
-          <View style={styles.benefitsList}>
-            {[
-              '1250+ 视频模板与滤镜',
-              '无限 AI 照片增强',
-              '优先处理通道',
-              '自动续期，随时取消',
-            ].map((b, i) => (
-              <View key={i} style={styles.benefitItem}>
-                <Ionicons name="checkmark-circle" size={18} color={Colors.success} />
-                <Text style={styles.benefitText}>{b}</Text>
-              </View>
-            ))}
-          </View>
-
-          <View style={styles.divider} />
-
-          {/* 续期说明 */}
-          <View style={styles.renewalSection}>
-            <Text style={styles.renewalTitle}>续期与取消</Text>
-            <Text style={styles.renewalText}>
-              订阅将在当前周期结束前 24 小时内自动续期。{'\n'}
-              取消路径：设置 {'>'} Apple 账户 {'>'} 订阅{'\n'}
-              在订阅期结束前至少 24 小时关闭自动续期，即可取消。
-            </Text>
-          </View>
-
-          <View style={styles.divider} />
-
-          {/* 账户 */}
-          <View style={styles.accountRow}>
-            <Text style={styles.accountLabel}>Apple ID</Text>
-            <Text style={styles.accountValue}>19839325301@163.com</Text>
-          </View>
-        </View>
-
-        {/* 订阅按钮 */}
-        <TouchableOpacity style={styles.subscribeBtn} activeOpacity={0.8} onPress={handleSubscribe}>
-          <Ionicons name="lock-closed" size={18} color={Colors.text} />
-          <Text style={styles.subscribeBtnText}>订阅</Text>
+        <TouchableOpacity
+          style={styles.subscribeBtn}
+          onPress={() => { setLoading(false); navigation.goBack(); }}
+        >
+          <Text style={styles.subscribeText}>订阅</Text>
         </TouchableOpacity>
-
-        <Text style={styles.footerNote}>
-          确认购买后，费用将从您的 Apple ID 账户扣除。
-        </Text>
-      </ScrollView>
-    </SafeAreaView>
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.bg },
-  dragBar: {
-    width: 36, height: 5, borderRadius: 3,
-    backgroundColor: Colors.textDark, alignSelf: 'center', marginTop: Spacing.sm,
+  container: { flex: 1, backgroundColor: '#000' },
+  heroImage: { position: 'absolute', top: 0, left: 0, right: 0, height: SCREEN_H * 0.55 },
+  heroFade: { position: 'absolute', top: SCREEN_H * 0.3, left: 0, right: 0, height: SCREEN_H * 0.25 },
+  allPlansBtn: {
+    position: 'absolute', top: 56, left: Spacing.xl, zIndex: 10,
+    backgroundColor: 'rgba(255,255,255,0.25)', paddingHorizontal: 14, paddingVertical: 6, borderRadius: BorderRadius.full,
   },
-  content: { padding: Spacing.xl, paddingBottom: Spacing['4xl'] },
-
-  topRow: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    marginBottom: Spacing.xl,
+  allPlansText: { color: '#fff', fontSize: FontSize.sm },
+  closeBtn: {
+    position: 'absolute', top: 56, right: Spacing.xl, zIndex: 10,
+    width: 28, height: 28, borderRadius: 14, backgroundColor: 'rgba(0,0,0,0.3)',
+    justifyContent: 'center', alignItems: 'center',
   },
-  restoreText: { fontSize: FontSize.base, color: Colors.primary, fontWeight: FontWeight.medium },
-
-  // Loading
-  loadingSection: { alignItems: 'center', paddingVertical: Spacing.base, gap: Spacing.md },
-  loadingText: { fontSize: FontSize.base, color: Colors.textMuted },
-
-  // App Card
-  appCard: {
-    flexDirection: 'row', alignItems: 'center', gap: Spacing.md,
-    backgroundColor: Colors.card, borderRadius: BorderRadius.lg,
-    padding: Spacing.lg, marginTop: Spacing.md, borderWidth: 1, borderColor: Colors.border,
+  loadingBox: {
+    position: 'absolute', top: '40%', alignSelf: 'center', zIndex: 5,
+    backgroundColor: 'rgba(0,0,0,0.6)', padding: Spacing.xl, borderRadius: BorderRadius.lg, alignItems: 'center', gap: Spacing.sm,
   },
-  appIcon: {
-    width: 60, height: 60, borderRadius: BorderRadius.md,
-    backgroundColor: Colors.bg, justifyContent: 'center', alignItems: 'center',
+  loadingText: { color: '#fff', fontSize: FontSize.sm },
+  sheet: {
+    position: 'absolute', bottom: 0, left: 0, right: 0,
+    backgroundColor: '#F2F2F7', borderTopLeftRadius: BorderRadius['2xl'], borderTopRightRadius: BorderRadius['2xl'],
+    padding: Spacing.xl, paddingBottom: Spacing['3xl'],
   },
-  appInfo: { flex: 1, gap: 3 },
-  appName: { fontSize: FontSize.md, fontWeight: FontWeight.semibold, color: Colors.text },
-  appMeta: { fontSize: FontSize.xs, color: Colors.textMuted },
-  appRating: { flexDirection: 'row', alignItems: 'center', gap: 2, marginTop: 2 },
-  ratingText: { fontSize: FontSize.xs, color: Colors.textMuted, marginLeft: 4 },
-
-  // Plan Card
-  planCard: {
-    backgroundColor: Colors.card, borderRadius: BorderRadius.lg,
-    padding: Spacing.xl, marginTop: Spacing.md,
-    borderWidth: 2, borderColor: Colors.primary,
-  },
-  planHeader: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
-  planTitle: { fontSize: FontSize.xl, fontWeight: FontWeight.bold, color: Colors.text },
-  planPrice: { fontSize: FontSize['3xl'], fontWeight: FontWeight.extrabold, color: Colors.text, marginTop: Spacing.sm },
-  planPeriod: { fontSize: FontSize.md, fontWeight: FontWeight.regular, color: Colors.textMuted },
-  divider: { height: 1, backgroundColor: Colors.border, marginVertical: Spacing.lg },
-
-  benefitsList: { gap: Spacing.md },
-  benefitItem: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md },
-  benefitText: { fontSize: FontSize.base, color: Colors.textSecondary, flex: 1 },
-
-  renewalSection: { gap: Spacing.sm },
-  renewalTitle: { fontSize: FontSize.base, fontWeight: FontWeight.semibold, color: Colors.text },
-  renewalText: { fontSize: FontSize.sm, color: Colors.textMuted, lineHeight: 20 },
-
-  accountRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  accountLabel: { fontSize: FontSize.base, color: Colors.textSecondary },
-  accountValue: { fontSize: FontSize.sm, color: Colors.textMuted },
-
+  sheetHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.lg },
+  sheetTitle: { fontSize: FontSize.lg, fontWeight: FontWeight.bold, color: Colors.text },
+  planCard: { backgroundColor: Colors.card, borderRadius: BorderRadius.lg, padding: Spacing.lg, marginBottom: Spacing.lg },
+  planRow: { flexDirection: 'row', gap: Spacing.md, alignItems: 'center' },
+  appIcon: { width: 48, height: 48, borderRadius: BorderRadius.md, justifyContent: 'center', alignItems: 'center' },
+  planInfo: { flex: 1 },
+  planName: { fontSize: FontSize.md, fontWeight: FontWeight.bold, color: Colors.text },
+  planApp: { fontSize: FontSize.sm, color: Colors.textMuted },
+  planType: { fontSize: FontSize.xs, color: Colors.textMuted },
+  divider: { height: 1, backgroundColor: Colors.borderLight, marginVertical: Spacing.md },
+  price: { fontSize: FontSize.md, fontWeight: FontWeight.bold, color: Colors.text, marginBottom: Spacing.md },
+  legal: { fontSize: FontSize.xs, color: Colors.textMuted, lineHeight: 18, marginBottom: Spacing.md },
+  account: { fontSize: FontSize.sm, color: Colors.textSecondary },
   subscribeBtn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.sm,
-    backgroundColor: Colors.primary, borderRadius: BorderRadius.xl,
-    paddingVertical: 16, marginTop: Spacing.xl, ...Shadow.button,
+    backgroundColor: '#007AFF', borderRadius: BorderRadius.lg,
+    paddingVertical: Spacing.base, alignItems: 'center',
   },
-  subscribeBtnText: { fontSize: FontSize.lg, fontWeight: FontWeight.bold, color: Colors.text },
-
-  footerNote: {
-    fontSize: FontSize.xs, color: Colors.textDark, textAlign: 'center', marginTop: Spacing.md,
-  },
+  subscribeText: { color: '#fff', fontSize: FontSize.md, fontWeight: FontWeight.semibold },
 });

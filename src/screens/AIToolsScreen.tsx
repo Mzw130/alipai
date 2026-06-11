@@ -1,104 +1,68 @@
 import React from 'react';
 import {
-  View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView,
+  View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, Image, Dimensions,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, FontSize, FontWeight, Spacing, BorderRadius } from '../theme';
 import { RootStackParamList } from '../navigation/AppNavigator';
+import AppHeader from '../components/AppHeader';
+import { EXPLORE_COLLECTIONS } from '../constants/tools';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
-
-interface ToolCollection {
-  key: string;
-  title: string;
-  icon: keyof typeof Ionicons.glyphMap;
-  items: string[];
-}
-
-const COLLECTIONS: ToolCollection[] = [
-  {
-    key: 'freeze',
-    title: 'Freeze The Moment',
-    icon: 'snow',
-    items: ['瞬间定格', '动态捕捉', '时间凝固'],
-  },
-  {
-    key: 'ai_body',
-    title: 'AI Body',
-    icon: 'body',
-    items: ['Slim Thick', 'Apple Shape', 'Athletic', 'Hourglass'],
-  },
-  {
-    key: 'street',
-    title: 'Street Race',
-    icon: 'car-sport',
-    items: ['Outdoor Road', 'Night Light', 'Street Racer', 'Race Scene'],
-  },
-  {
-    key: 'true_skin',
-    title: 'True Skin Series',
-    icon: 'rose',
-    items: ['Soft Matte 01', 'Natural 01'],
-  },
-  {
-    key: 'evening',
-    title: 'Evening Wear',
-    icon: 'shirt',
-    items: ['Crimson Elegance Gown', 'Elegant Bow Ensemble', 'Black Ballet Chic', 'Classic Body Dress'],
-  },
-  {
-    key: 'holiday',
-    title: 'The Holiday Edi',
-    icon: 'gift',
-    items: ['节日主题特效', '圣诞魔法', '新年光彩'],
-  },
-];
+const CARD_W = 140;
 
 export default function AIToolsScreen() {
   const navigation = useNavigation<Nav>();
+
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>AI 工具</Text>
-        <Text style={styles.headerSub}>探索全部 AI 特效与塑形工具</Text>
-      </View>
+      <AppHeader showCredits credits={5000} />
 
-      <ScrollView contentContainerStyle={styles.content}>
-        {COLLECTIONS.map((collection) => (
-          <TouchableOpacity
-            key={collection.key}
-            style={styles.collectionCard}
-            activeOpacity={0.7}
-            onPress={() => navigation.navigate('AIToolDetailScreen', { collectionKey: collection.key })}
-          >
-            <View style={styles.cardHeader}>
-              <View style={styles.cardIcon}>
-                <Ionicons name={collection.icon} size={28} color={Colors.primary} />
-              </View>
-              <View style={styles.cardInfo}>
-                <Text style={styles.cardTitle}>{collection.title}</Text>
-                <Text style={styles.cardCount}>
-                  {collection.items.length} 个工具
-                </Text>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />
-            </View>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
+        {EXPLORE_COLLECTIONS.map((collection) => (
+          <View key={collection.key} style={styles.section}>
+            <TouchableOpacity
+              style={styles.sectionHeader}
+              onPress={() => navigation.navigate('AIToolDetailScreen', { collectionKey: collection.key })}
+            >
+              <Text style={styles.sectionTitle}>{collection.title}</Text>
+              <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
+            </TouchableOpacity>
 
-            {/* 工具标签列表 */}
-            <View style={styles.toolsRow}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.horizontalScroll}
+            >
               {collection.items.map((item, idx) => (
-                <View key={idx} style={styles.toolTag}>
-                  <Text style={styles.toolTagText}>{item}</Text>
-                </View>
+                <TouchableOpacity
+                  key={idx}
+                  style={styles.card}
+                  activeOpacity={0.85}
+                  onPress={() => navigation.navigate('AIToolDetailScreen', { collectionKey: collection.key })}
+                >
+                  <Image
+                    source={require('../../assets/design/template-flower.jpeg')}
+                    style={styles.cardImage}
+                    resizeMode="cover"
+                  />
+                  <View style={styles.cardOverlay}>
+                    <Text style={styles.cardLabel} numberOfLines={1}>{item}</Text>
+                  </View>
+                  {collection.key === 'freeze' && (
+                    <View style={styles.numberBadge}>
+                      <Text style={styles.numberText}>{idx + 1}</Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
               ))}
-            </View>
-          </TouchableOpacity>
+            </ScrollView>
+          </View>
         ))}
 
-        <View style={{ height: 100 }} />
+        <View style={{ height: 120 }} />
       </ScrollView>
     </SafeAreaView>
   );
@@ -106,55 +70,53 @@ export default function AIToolsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.bg },
-  header: {
+  content: { paddingTop: Spacing.sm },
+  section: { marginBottom: Spacing.xl },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: Spacing.xl,
-    paddingTop: Spacing.md,
-    paddingBottom: Spacing.lg,
-    gap: Spacing.xs,
-  },
-  headerTitle: { fontSize: FontSize['2xl'], fontWeight: FontWeight.bold, color: Colors.text },
-  headerSub: { fontSize: FontSize.sm, color: Colors.textMuted },
-
-  content: { paddingHorizontal: Spacing.xl },
-
-  collectionCard: {
-    backgroundColor: Colors.card,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.lg,
     marginBottom: Spacing.md,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    gap: Spacing.md,
   },
-  cardHeader: {
-    flexDirection: 'row',
+  sectionTitle: {
+    fontSize: FontSize.xl,
+    fontWeight: FontWeight.bold,
+    color: Colors.text,
+    fontStyle: 'italic',
+  },
+  horizontalScroll: { paddingHorizontal: Spacing.xl, gap: Spacing.md },
+  card: {
+    width: CARD_W,
+    height: CARD_W * 1.4,
+    borderRadius: BorderRadius.lg,
+    overflow: 'hidden',
+    backgroundColor: Colors.cardMuted,
+  },
+  cardImage: { width: '100%', height: '100%' },
+  cardOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingVertical: Spacing.sm,
     alignItems: 'center',
-    gap: Spacing.md,
+    backgroundColor: 'rgba(0,0,0,0.2)',
   },
-  cardIcon: {
-    width: 50,
-    height: 50,
-    borderRadius: BorderRadius.md,
-    backgroundColor: Colors.bg,
-    justifyContent: 'center',
-    alignItems: 'center',
+  cardLabel: {
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.semibold,
+    color: '#fff',
+    paddingHorizontal: Spacing.sm,
   },
-  cardInfo: { flex: 1, gap: 2 },
-  cardTitle: { fontSize: FontSize.md, fontWeight: FontWeight.semibold, color: Colors.text },
-  cardCount: { fontSize: FontSize.sm, color: Colors.textMuted },
-
-  toolsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.sm,
+  numberBadge: {
+    position: 'absolute',
+    bottom: Spacing.sm,
+    alignSelf: 'center',
   },
-  toolTag: {
-    backgroundColor: Colors.bg,
-    borderRadius: BorderRadius.full,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs,
-    borderWidth: 1,
-    borderColor: Colors.border,
+  numberText: {
+    fontSize: FontSize.md,
+    fontWeight: FontWeight.bold,
+    color: '#fff',
   },
-  toolTagText: { fontSize: FontSize.xs, color: Colors.textSecondary },
 });

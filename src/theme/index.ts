@@ -1,39 +1,56 @@
-// ClipAI 主题配色 & 样式常量
-// iPhone 基准: 390 x 844 points (1170 x 2532 pixels @3x)
+// ClipAI 主题 — 设计稿浅色风格
+// iPhone 基准: 390 x 844 points
 
 export const Colors = {
   // 主背景
-  bg: '#0D0D0D',
-  bgSecondary: '#111111',
-  card: '#1A1A1A',
-  cardLight: '#222222',
+  bg: '#FAF7F5',
+  bgSecondary: '#F3EDE8',
+  bgWarm: '#FDF5F2',
+  card: '#FFFFFF',
+  cardLight: '#F0EBE6',
+  cardMuted: '#E8E0D9',
 
   // 主色调
-  primary: '#8B5CF6',     // 紫色
-  primaryLight: '#A78BFA',
+  primary: '#7B61FF',
+  primaryLight: '#9B7FFF',
+  primaryDark: '#6B4FE0',
+
+  // 渐变
+  proGradientStart: '#7B61FF',
+  proGradientEnd: '#3B82F6',
+  ctaGradientStart: '#FF5E62',
+  ctaGradientEnd: '#FF9966',
+  generateGradientStart: '#2B85FF',
+  generateGradientEnd: '#A066FF',
 
   // Pro / 会员
-  proGold: '#D4AF37',
-  proGoldLight: '#F0D060',
+  proGold: '#7B61FF',
+  proBadge: '#3B82F6',
 
   // 文字
-  text: '#FFFFFF',
-  textSecondary: '#CCCCCC',
+  text: '#1A1A1A',
+  textSecondary: '#4A4A4A',
   textMuted: '#999999',
   textDark: '#666666',
+  textOnDark: '#FFFFFF',
 
   // 状态
-  success: '#4ADE80',
-  error: '#F87171',
-  warning: '#FBBF24',
+  success: '#22C55E',
+  error: '#EF4444',
+  warning: '#F59E0B',
+  hot: '#E85D4C',
 
   // 边框
-  border: '#2A2A2A',
-  borderLight: '#333333',
+  border: '#E8E0D9',
+  borderLight: '#F0EBE6',
 
   // Tab Bar
-  tabBar: '#0A0A0A',
-  tabBarBorder: '#1A1A1A',
+  tabBar: 'rgba(255,255,255,0.92)',
+  tabBarBorder: 'rgba(0,0,0,0.06)',
+
+  // 深色遮罩（订阅页等）
+  overlay: 'rgba(0,0,0,0.55)',
+  darkCard: '#2C2C2E',
 };
 
 export const Spacing = {
@@ -70,11 +87,12 @@ export const FontWeight = {
 };
 
 export const BorderRadius = {
-  sm: 6,
-  md: 10,
-  lg: 14,
-  xl: 18,
+  sm: 8,
+  md: 12,
+  lg: 16,
+  xl: 20,
   '2xl': 24,
+  '3xl': 30,
   full: 9999,
 };
 
@@ -82,15 +100,22 @@ export const Shadow = {
   card: {
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 5,
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 3,
   },
   button: {
-    shadowColor: '#8B5CF6',
+    shadowColor: '#7B61FF',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
+    shadowOpacity: 0.25,
     shadowRadius: 12,
+    elevation: 6,
+  },
+  tabBar: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
     elevation: 8,
   },
 };

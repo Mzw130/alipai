@@ -1,140 +1,147 @@
 import React, { useState } from 'react';
 import {
-  View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, TextInput,
+  View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView,
+  TextInput, Image, Dimensions,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, FontSize, FontWeight, Spacing, BorderRadius } from '../theme';
+import AppHeader from '../components/AppHeader';
 
-const TOP_TABS = ['最近', '喜欢'];
-const FILTERS = ['热门', '最新', '最多喜欢'];
-
-const EXPLORE_ITEMS = [
-  { id: '1', name: 'Pokemon', type: 'AI视频模板' },
-  { id: '2', name: 'Dorky and cute', type: 'AI视频模板' },
-  { id: '3', name: 'Anime Style', type: 'AI视频模板' },
-  { id: '4', name: 'Cinematic', type: 'AI视频模板' },
+const TOP_TABS = [
+  { key: 'recent', label: '最近', icon: 'time-outline' as const },
+  { key: 'liked', label: '喜欢', icon: 'heart-outline' as const },
 ];
+const FILTERS = ['热门', '最新', '最多喜欢'];
+const TAGS = ['Pokémon', 'Dorky and cute'];
+
+const GRID_ITEMS = [
+  { id: '1', image: require('../../assets/design/template-flower.jpeg') },
+  { id: '2', image: require('../../assets/design/template-flower.jpeg') },
+  { id: '3', image: require('../../assets/design/template-flower.jpeg') },
+  { id: '4', image: require('../../assets/design/template-flower.jpeg') },
+  { id: '5', image: require('../../assets/design/template-flower.jpeg') },
+  { id: '6', image: require('../../assets/design/template-flower.jpeg') },
+];
+
+const { width: SCREEN_W } = Dimensions.get('window');
+const GRID_W = (SCREEN_W - Spacing.xl * 2 - Spacing.sm * 2) / 3;
 
 export default function ExploreScreen() {
   const navigation = useNavigation<any>();
-  const [activeTab, setActiveTab] = useState('最近');
+  const [activeTab, setActiveTab] = useState('recent');
   const [activeFilter, setActiveFilter] = useState('热门');
-  const [searchVisible, setSearchVisible] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [showFilterMenu, setShowFilterMenu] = useState(false);
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>探索</Text>
-        <TouchableOpacity
-          activeOpacity={0.7}
-          onPress={() => setSearchVisible(!searchVisible)}
-        >
-          <Ionicons name="search" size={22} color={Colors.text} />
-        </TouchableOpacity>
-      </View>
+      <AppHeader />
 
-      {/* Search Bar (toggle) */}
-      {searchVisible && (
-        <View style={styles.searchBarWrap}>
-          <TextInput
-            style={styles.searchInput}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            placeholder="搜索视频模板..."
-            placeholderTextColor={Colors.textDark}
-            autoFocus
-          />
-          <TouchableOpacity onPress={() => { setSearchVisible(false); setSearchQuery(''); }}>
-            <Ionicons name="close-circle" size={20} color={Colors.textMuted} />
-          </TouchableOpacity>
-        </View>
-      )}
-
-      {/* Top Tabs */}
+      {/* Tabs */}
       <View style={styles.tabRow}>
         {TOP_TABS.map((tab) => (
           <TouchableOpacity
-            key={tab}
-            style={[styles.tab, activeTab === tab && styles.tabActive]}
-            onPress={() => setActiveTab(tab)}
+            key={tab.key}
+            style={styles.tab}
+            onPress={() => setActiveTab(tab.key)}
             activeOpacity={0.7}
           >
-            <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
-              {tab}
+            <Ionicons
+              name={tab.icon}
+              size={16}
+              color={activeTab === tab.key ? Colors.primary : Colors.textMuted}
+            />
+            <Text style={[styles.tabText, activeTab === tab.key && styles.tabTextActive]}>
+              {tab.label}
             </Text>
+            {activeTab === tab.key && <View style={styles.tabIndicator} />}
           </TouchableOpacity>
         ))}
       </View>
 
-      <ScrollView contentContainerStyle={styles.content}>
-        {/* 图片转视频板块 */}
-        <TouchableOpacity
-          style={styles.featureCard}
-          activeOpacity={0.7}
-          onPress={() => navigation.navigate('CustomVideoScreen')}
-        >
-          <View style={styles.featureInfo}>
-            <Text style={styles.featureTitle}>图片转视频</Text>
-            <Text style={styles.featureSub}>为您的照片注入动感</Text>
-          </View>
-          <View style={styles.featureIconBox}>
-            <Ionicons name="play-circle" size={36} color={Colors.primary} />
-          </View>
-        </TouchableOpacity>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        {/* 视频生成 */}
+        <Text style={styles.blockTitle}>视频生成</Text>
+        <View style={styles.genCards}>
+          <TouchableOpacity
+            style={styles.genCardActive}
+            onPress={() => navigation.navigate('CustomVideoScreen')}
+          >
+            <Ionicons name="image-outline" size={28} color={Colors.primary} />
+            <Text style={styles.genCardActiveText}>图片转视频</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.genCard}
+            onPress={() => navigation.navigate('CustomVideoScreen')}
+          >
+            <Ionicons name="code-slash-outline" size={28} color={Colors.textMuted} />
+            <Text style={styles.genCardText}>自定义</Text>
+          </TouchableOpacity>
+        </View>
 
-        {/* 搜索视频 */}
-        <TouchableOpacity
-          style={styles.searchCard}
-          activeOpacity={0.7}
-          onPress={() => setSearchVisible(true)}
-        >
-          <Ionicons name="search" size={20} color={Colors.textMuted} />
-          <Text style={styles.searchPlaceholder}>搜索视频...</Text>
-        </TouchableOpacity>
+        {/* 搜索 */}
+        <View style={styles.searchBar}>
+          <Text style={styles.searchPlaceholder}>搜索视频</Text>
+          <Ionicons name="search" size={18} color={Colors.textMuted} />
+        </View>
 
-        {/* 筛选栏 */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.filterScroll}
-          contentContainerStyle={styles.filterRow}
-        >
-          {FILTERS.map((f) => (
+        {/* 图片转视频 */}
+        <View style={styles.filterHeader}>
+          <View>
+            <Text style={styles.blockTitle}>图片转视频</Text>
+            <Text style={styles.blockSub}>为您的照片注入动感</Text>
+          </View>
+          <View>
             <TouchableOpacity
-              key={f}
-              style={[styles.filterBtn, activeFilter === f && styles.filterBtnActive]}
-              onPress={() => setActiveFilter(f)}
-              activeOpacity={0.7}
+              style={styles.filterDropdown}
+              onPress={() => setShowFilterMenu(!showFilterMenu)}
             >
-              <Text style={[styles.filterText, activeFilter === f && styles.filterTextActive]}>
-                {f}
-              </Text>
+              <Text style={styles.filterDropdownText}>{activeFilter}</Text>
+              <Ionicons name="chevron-down" size={14} color={Colors.text} />
             </TouchableOpacity>
-          ))}
-        </ScrollView>
+            {showFilterMenu && (
+              <View style={styles.filterMenu}>
+                {FILTERS.map((f) => (
+                  <TouchableOpacity
+                    key={f}
+                    style={styles.filterMenuItem}
+                    onPress={() => { setActiveFilter(f); setShowFilterMenu(false); }}
+                  >
+                    <Text style={[styles.filterMenuText, activeFilter === f && styles.filterMenuActive]}>
+                      {f}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+          </View>
+        </View>
 
-        {/* 模板网格 */}
+        <View style={styles.tagRow}>
+          {TAGS.map((tag) => (
+            <View key={tag} style={styles.tag}>
+              <Text style={styles.tagText}>{tag}</Text>
+            </View>
+          ))}
+        </View>
+
+        {/* 网格 */}
         <View style={styles.grid}>
-          {EXPLORE_ITEMS.map((item) => (
+          <View style={[styles.gridItem, styles.gridPlaceholder]}>
+            <Ionicons name="image-outline" size={32} color={Colors.textMuted} />
+          </View>
+          {GRID_ITEMS.map((item) => (
             <TouchableOpacity
               key={item.id}
-              style={styles.gridCard}
-              activeOpacity={0.7}
+              style={styles.gridItem}
               onPress={() => navigation.navigate('CustomVideoScreen')}
             >
-              <View style={styles.gridImage}>
-                <Ionicons name="videocam" size={32} color={Colors.textMuted} />
-              </View>
-              <View style={styles.gridInfo}>
-                <Text style={styles.gridName}>{item.name}</Text>
-                <Text style={styles.gridType}>{item.type}</Text>
-              </View>
+              <Image source={item.image} style={styles.gridImage} resizeMode="cover" />
             </TouchableOpacity>
           ))}
         </View>
+
+        <View style={{ height: 120 }} />
       </ScrollView>
     </SafeAreaView>
   );
@@ -142,106 +149,116 @@ export default function ExploreScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.bg },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.xl,
-    paddingVertical: Spacing.md,
-  },
-  headerTitle: { fontSize: FontSize['2xl'], fontWeight: FontWeight.bold, color: Colors.text },
-
-  searchBarWrap: {
-    flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: Spacing.xl, marginBottom: Spacing.md,
-  },
-  searchInput: {
-    flex: 1, backgroundColor: Colors.card, borderRadius: BorderRadius.full,
-    paddingHorizontal: Spacing.lg, paddingVertical: Spacing.sm,
-    color: Colors.text, fontSize: FontSize.base,
-    marginRight: Spacing.sm,
-  },
-
   tabRow: {
     flexDirection: 'row',
     paddingHorizontal: Spacing.xl,
-    gap: Spacing.xl,
-    marginBottom: Spacing.md,
+    gap: Spacing['2xl'],
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.borderLight,
+    paddingBottom: 0,
   },
-  tab: { paddingBottom: Spacing.sm },
-  tabActive: { borderBottomWidth: 2, borderBottomColor: Colors.primary },
-  tabText: { fontSize: FontSize.md, color: Colors.textMuted },
-  tabTextActive: { color: Colors.text, fontWeight: FontWeight.semibold },
-
-  content: { padding: Spacing.xl, paddingBottom: 100 },
-
-  featureCard: {
+  tab: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingBottom: Spacing.md,
+    position: 'relative',
+  },
+  tabText: { fontSize: FontSize.base, color: Colors.textMuted },
+  tabTextActive: { color: Colors.primary, fontWeight: FontWeight.semibold },
+  tabIndicator: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 2,
+    backgroundColor: Colors.primary,
+    borderRadius: 1,
+  },
+  content: { padding: Spacing.xl },
+  blockTitle: { fontSize: FontSize.lg, fontWeight: FontWeight.bold, color: Colors.text, marginBottom: Spacing.md },
+  blockSub: { fontSize: FontSize.sm, color: Colors.textMuted, marginTop: 2 },
+  genCards: { flexDirection: 'row', gap: Spacing.md, marginBottom: Spacing.xl },
+  genCardActive: {
+    flex: 1,
+    backgroundColor: Colors.card,
+    borderRadius: BorderRadius.lg,
+    paddingVertical: Spacing.xl,
+    alignItems: 'center',
+    gap: Spacing.sm,
+    borderWidth: 1,
+    borderColor: Colors.primary + '30',
+  },
+  genCardActiveText: { fontSize: FontSize.base, color: Colors.primary, fontWeight: FontWeight.semibold },
+  genCard: {
+    flex: 1,
+    backgroundColor: Colors.card,
+    borderRadius: BorderRadius.lg,
+    paddingVertical: Spacing.xl,
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  genCardText: { fontSize: FontSize.base, color: Colors.textMuted },
+  searchBar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     backgroundColor: Colors.card,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.lg,
-    marginBottom: Spacing.lg,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  featureInfo: { gap: 4 },
-  featureTitle: { fontSize: FontSize.lg, fontWeight: FontWeight.bold, color: Colors.text },
-  featureSub: { fontSize: FontSize.sm, color: Colors.textMuted },
-  featureIconBox: {
-    width: 56,
-    height: 56,
-    borderRadius: BorderRadius.md,
-    backgroundColor: Colors.bg,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  searchCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.md,
-    backgroundColor: Colors.card,
     borderRadius: BorderRadius.full,
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
-    marginBottom: Spacing.lg,
+    marginBottom: Spacing.xl,
   },
-  searchPlaceholder: { fontSize: FontSize.base, color: Colors.textMuted, flex: 1 },
-
-  filterScroll: { marginBottom: Spacing.lg },
-  filterRow: { gap: Spacing.sm },
-  filterBtn: {
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.sm,
-    borderRadius: BorderRadius.full,
-    backgroundColor: Colors.card,
-  },
-  filterBtnActive: { backgroundColor: Colors.primary },
-  filterText: { fontSize: FontSize.sm, color: Colors.textMuted },
-  filterTextActive: { color: Colors.text, fontWeight: FontWeight.medium },
-
-  grid: {
+  searchPlaceholder: { fontSize: FontSize.base, color: Colors.textMuted },
+  filterHeader: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.md,
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: Spacing.md,
   },
-  gridCard: {
-    width: '47%',
+  filterDropdown: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
     backgroundColor: Colors.card,
-    borderRadius: BorderRadius.lg,
-    overflow: 'hidden',
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.md,
     borderWidth: 1,
     borderColor: Colors.border,
   },
-  gridImage: {
-    height: 160,
-    backgroundColor: Colors.cardLight,
-    justifyContent: 'center',
-    alignItems: 'center',
+  filterDropdownText: { fontSize: FontSize.sm, color: Colors.text },
+  filterMenu: {
+    position: 'absolute',
+    top: 36,
+    right: 0,
+    backgroundColor: Colors.card,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    zIndex: 100,
+    minWidth: 100,
+    overflow: 'hidden',
   },
-  gridInfo: { padding: Spacing.md, gap: 2 },
-  gridName: { fontSize: FontSize.base, fontWeight: FontWeight.semibold, color: Colors.text },
-  gridType: { fontSize: FontSize.xs, color: Colors.textMuted },
+  filterMenuItem: { paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm },
+  filterMenuText: { fontSize: FontSize.sm, color: Colors.textSecondary },
+  filterMenuActive: { color: Colors.primary, fontWeight: FontWeight.semibold },
+  tagRow: { flexDirection: 'row', gap: Spacing.sm, marginBottom: Spacing.lg },
+  tag: {
+    backgroundColor: Colors.cardLight,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 6,
+    borderRadius: BorderRadius.full,
+  },
+  tagText: { fontSize: FontSize.sm, color: Colors.textSecondary },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm },
+  gridItem: {
+    width: GRID_W,
+    height: GRID_W * 1.3,
+    borderRadius: BorderRadius.md,
+    overflow: 'hidden',
+    backgroundColor: Colors.cardMuted,
+  },
+  gridPlaceholder: { justifyContent: 'center', alignItems: 'center' },
+  gridImage: { width: '100%', height: '100%' },
 });

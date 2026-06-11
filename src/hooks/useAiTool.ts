@@ -179,6 +179,11 @@ export function useAiTool(toolType: string) {
     setCurrentTaskId(null);
   }, []);
 
+  const setImage = useCallback((uri: string) => {
+    setSelectedImage(uri);
+    setError(null);
+  }, []);
+
   // 当前任务状态
   const currentTask = currentTaskId && activeTask?.id === currentTaskId ? activeTask : null;
   const isCurrentProcessing = currentTask?.status === 'uploading' || currentTask?.status === 'processing';
@@ -207,5 +212,6 @@ export function useAiTool(toolType: string) {
     takePhoto,
     generate,
     clear,
+    setSelectedImage: setImage,
   };
 }

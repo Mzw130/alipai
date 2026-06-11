@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
-  View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, Image, RefreshControl, ActivityIndicator, Modal, Dimensions, Animated, Platform, PanResponder,
+  View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, Image,
+  RefreshControl, ActivityIndicator, Modal, Dimensions, Animated, PanResponder,
 } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -13,15 +14,19 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const ITEM_GAP = Spacing.md;
 const ITEM_WIDTH = (SCREEN_WIDTH - Spacing.xl * 2 - ITEM_GAP) / 2;
 
-const TABS = [
-  { key: 'all', label: '全部', icon: 'apps' },
-  { key: 'video', label: '视频', icon: 'videocam' },
-  { key: 'image', label: '图片', icon: 'image' },
+const TYPE_TABS = [
+  { key: 'video', label: '视频' },
+  { key: 'image', label: '图片' },
+];
+const FILTER_TABS = [
+  { key: 'all', label: '全部' },
+  { key: 'fav', label: '已收藏', icon: 'star' as const },
 ];
 
 export default function MaterialLibraryScreen() {
   const navigation = useNavigation();
-  const [activeTab, setActiveTab] = useState('all');
+  const [activeType, setActiveType] = useState('video');
+  const [activeFilter, setActiveFilter] = useState('all');
   const [materials, setMaterials] = useState<Material[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -35,9 +40,7 @@ export default function MaterialLibraryScreen() {
   const fetchMaterials = useCallback(async (type: string) => {
     try {
       const data = await getMaterials(type, 1, 50);
-      if (data?.items) {
-        setMaterials(data.items);
-      }
+      if (data?.items) setMaterials(data.items);
     } catch (err) {
       console.error('[MaterialLibrary] 加载失败:', err);
     } finally {
@@ -49,22 +52,17 @@ export default function MaterialLibraryScreen() {
   useFocusEffect(
     useCallback(() => {
       setLoading(true);
-      fetchMaterials(activeTab);
-    }, [activeTab, fetchMaterials]),
+      fetchMaterials(activeType);
+    }, [activeType, fetchMaterials]),
   );
 
-  // 为所有视频生成本地缩略图（第一帧）
   useEffect(() => {
     materials.forEach(async (item) => {
       if (item.type !== 'video') return;
-      if (generatingRef.current.has(item.id)) return;
-      if (videoThumbnails[item.id]) return;
-
+      if (generatingRef.current.has(item.id) || videoThumbnails[item.id]) return;
       generatingRef.current.add(item.id);
       const localUri = await getVideoThumbnail(item.url);
-      if (localUri) {
-        setVideoThumbnails(prev => ({ ...prev, [item.id]: localUri }));
-      }
+      if (localUri) setVideoThumbnails((prev) => ({ ...prev, [item.id]: localUri }));
       generatingRef.current.delete(item.id);
     });
   }, [materials]);
@@ -72,7 +70,7 @@ export default function MaterialLibraryScreen() {
   const handleDelete = async (id: string) => {
     try {
       await deleteMaterial(id);
-      setMaterials(prev => prev.filter(m => m.id !== id));
+      setMaterials((prev) => prev.filter((m) => m.id !== id));
       if (selectedItem?.id === id) closePreview();
     } catch (err) {
       console.error('[MaterialLibrary] 删除失败:', err);
@@ -82,113 +80,54 @@ export default function MaterialLibraryScreen() {
   const openPreview = (item: Material) => {
     setSelectedItem(item);
     panY.setValue(0);
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 250,
-      useNativeDriver: true,
-    }).start();
+    Animated.timing(fadeAnim, { toValue: 1, duration: 250, useNativeDriver: true }).start();
   };
 
   const closePreview = () => {
-    Animated.timing(fadeAnim, {
-      toValue: 0,
-      duration: 200,
-      useNativeDriver: true,
-    }).start(() => {
+    Animated.timing(fadeAnim, { toValue: 0, duration: 200, useNativeDriver: true }).start(() => {
       setSelectedItem(null);
       panY.setValue(0);
     });
   };
 
-  // 下滑关闭手势
   const panResponder = useRef(
     PanResponder.create({
-      onMoveShouldSetPanResponder: (_, gestureState) =>
-        Math.abs(gestureState.dy) > 10 && Math.abs(gestureState.dy) > Math.abs(gestureState.dx),
-      onPanResponderMove: (_, gestureState) => {
-        panY.setValue(Math.max(0, gestureState.dy));
-      },
-      onPanResponderRelease: (_, gestureState) => {
-        if (gestureState.dy > 100 || gestureState.vy > 0.5) {
-          const { height: screenHeight } = Dimensions.get('window');
-          Animated.timing(panY, {
-            toValue: screenHeight,
-            duration: 200,
-            useNativeDriver: true,
-          }).start(() => {
-            panY.setValue(0);
-            closePreview();
-          });
-        } else {
-          Animated.spring(panY, {
-            toValue: 0,
-            useNativeDriver: true,
-            friction: 6,
-          }).start();
-        }
+      onMoveShouldSetPanResponder: (_, g) => Math.abs(g.dy) > 10 && Math.abs(g.dy) > Math.abs(g.dx),
+      onPanResponderMove: (_, g) => panY.setValue(Math.max(0, g.dy)),
+      onPanResponderRelease: (_, g) => {
+        if (g.dy > 100 || g.vy > 0.5) closePreview();
+        else Animated.spring(panY, { toValue: 0, useNativeDriver: true, friction: 6 }).start();
       },
     }),
   ).current;
 
-  const handleImageLoad = (id: string) => {
-    setImageLoaded(prev => ({ ...prev, [id]: true }));
-  };
-
   const renderItem = (item: Material) => {
     const isVideo = item.type === 'video';
-    // 封面优先级: 本地缩略图 > 后端 thumbnailUrl > 原始 url
     const coverUrl = isVideo
       ? (videoThumbnails[item.id] || item.thumbnailUrl || item.url)
       : item.url;
-    const loaded = imageLoaded[item.id];
 
     return (
-      <TouchableOpacity
-        key={item.id}
-        style={styles.gridItem}
-        activeOpacity={0.9}
-        onPress={() => openPreview(item)}
-      >
-        {/* 缩略图 */}
+      <TouchableOpacity key={item.id} style={styles.gridItem} activeOpacity={0.9} onPress={() => openPreview(item)}>
         <View style={styles.itemImage}>
           <Image
             source={{ uri: coverUrl }}
             style={styles.itemImageFull}
             resizeMode="cover"
-            onLoad={() => handleImageLoad(item.id)}
+            onLoad={() => setImageLoaded((prev) => ({ ...prev, [item.id]: true }))}
           />
-          {/* 加载中骨架 */}
-          {!loaded && (
+          {!imageLoaded[item.id] && (
             <View style={styles.skeleton}>
               <ActivityIndicator size="small" color={Colors.primary} />
             </View>
           )}
-          {/* 视频播放按钮覆盖层 */}
           {isVideo && (
             <View style={styles.playOverlay}>
               <View style={styles.playBtn}>
-                <Ionicons name="play" size={22} color="#fff" style={{ marginLeft: 2 }} />
+                <Ionicons name="play" size={20} color="#fff" style={{ marginLeft: 2 }} />
               </View>
             </View>
           )}
-          {/* 类型标签 */}
-          <View style={[styles.typeTag, isVideo && styles.typeTagVideo]}>
-            <Ionicons name={isVideo ? 'videocam' : 'image'} size={10} color="#fff" />
-            <Text style={styles.typeTagText}>{isVideo ? '视频' : '图片'}</Text>
-          </View>
-        </View>
-
-        {/* 底部信息 */}
-        <View style={styles.itemFooter}>
-          <Text style={styles.itemDate} numberOfLines={1}>
-            {new Date(item.createdAt).toLocaleDateString('zh-CN')}
-          </Text>
-          <TouchableOpacity
-            onPress={(e) => { e.stopPropagation(); handleDelete(item.id); }}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          >
-            <Ionicons name="trash-outline" size={16} color={Colors.textMuted} />
-          </TouchableOpacity>
         </View>
       </TouchableOpacity>
     );
@@ -198,122 +137,88 @@ export default function MaterialLibraryScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.7}>
           <Ionicons name="chevron-back" size={24} color={Colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>我的素材</Text>
-        <Text style={styles.count}>{materials.length} 项</Text>
-      </View>
-
-      {/* Tabs */}
-      <View style={styles.tabRow}>
-        {TABS.map((tab) => (
-          <TouchableOpacity
-            key={tab.key}
-            style={[styles.tab, activeTab === tab.key && styles.tabActive]}
-            onPress={() => { setActiveTab(tab.key); setLoading(true); setImageLoaded({}); }}
-            activeOpacity={0.7}
-          >
-            <Ionicons
-              name={tab.icon as any}
-              size={14}
-              color={activeTab === tab.key ? Colors.text : Colors.textMuted}
-            />
-            <Text style={[styles.tabText, activeTab === tab.key && styles.tabTextActive]}>
-              {tab.label}
-            </Text>
+        <Text style={styles.headerTitle}>素材库</Text>
+        <View style={styles.headerRight}>
+          <View style={styles.creditsPill}>
+            <View style={styles.creditIcon}>
+              <Ionicons name="star" size={10} color="#fff" />
+            </View>
+            <Text style={styles.creditsText}>0</Text>
+          </View>
+          <TouchableOpacity>
+            <Ionicons name="settings-outline" size={22} color={Colors.text} />
           </TouchableOpacity>
-        ))}
+        </View>
       </View>
 
-      {/* Content */}
+      <View style={styles.filterSection}>
+        <View style={styles.tabRow}>
+          {TYPE_TABS.map((tab) => (
+            <TouchableOpacity
+              key={tab.key}
+              style={[styles.pillBtn, activeType === tab.key && styles.pillBtnActive]}
+              onPress={() => { setActiveType(tab.key); setLoading(true); }}
+            >
+              <Text style={[styles.pillText, activeType === tab.key && styles.pillTextActive]}>{tab.label}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+        <View style={styles.tabRow}>
+          {FILTER_TABS.map((tab) => (
+            <TouchableOpacity
+              key={tab.key}
+              style={[styles.pillBtn, activeFilter === tab.key && styles.pillBtnActive]}
+              onPress={() => setActiveFilter(tab.key)}
+            >
+              {tab.icon && <Ionicons name={tab.icon} size={12} color={activeFilter === tab.key ? '#fff' : '#F59E0B'} />}
+              <Text style={[styles.pillText, activeFilter === tab.key && styles.pillTextActive]}>{tab.label}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+
       {loading ? (
         <View style={styles.centered}>
           <ActivityIndicator size="large" color={Colors.primary} />
         </View>
       ) : materials.length === 0 ? (
-        <View style={styles.centered}>
-          <Ionicons name="folder-open" size={48} color={Colors.textMuted} />
-          <Text style={styles.emptyText}>暂无素材</Text>
-          <Text style={styles.emptySub}>使用 AI 工具生成图片或视频后将在此显示</Text>
-        </View>
+        <View style={styles.centered} />
       ) : (
         <ScrollView
           contentContainerStyle={styles.grid}
-          showsVerticalScrollIndicator={false}
           refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={() => { setRefreshing(true); fetchMaterials(activeTab); }}
-              tintColor={Colors.primary}
-            />
+            <RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchMaterials(activeType); }} tintColor={Colors.primary} />
           }
         >
           {materials.map(renderItem)}
         </ScrollView>
       )}
 
-      {/* ========== 内联预览 Modal ========== */}
       <Modal visible={!!selectedItem} transparent animationType="none" onRequestClose={closePreview}>
         <Animated.View
           style={[styles.previewOverlay, { opacity: fadeAnim, transform: [{ translateY: panY }] }]}
           {...panResponder.panHandlers}
         >
-          {/* 顶部栏 */}
           <View style={styles.previewHeader}>
-            <TouchableOpacity onPress={closePreview} style={styles.previewCloseBtn}>
+            <TouchableOpacity onPress={closePreview}>
               <Ionicons name="close" size={24} color={Colors.text} />
             </TouchableOpacity>
-            <Text style={styles.previewTitle}>
-              {selectedIsVideo ? '视频预览' : '图片预览'}
-            </Text>
-            <TouchableOpacity onPress={() => selectedItem && handleDelete(selectedItem.id)} style={styles.previewDeleteBtn}>
+            <TouchableOpacity onPress={() => selectedItem && handleDelete(selectedItem.id)}>
               <Ionicons name="trash-outline" size={22} color={Colors.error} />
             </TouchableOpacity>
           </View>
-
-          {/* 内容区 */}
           <View style={styles.previewContent}>
             {selectedItem && !selectedIsVideo && (
-              <Image
-                source={{ uri: selectedItem.url }}
-                style={styles.previewImage}
-                resizeMode="contain"
-              />
+              <Image source={{ uri: selectedItem.url }} style={styles.previewImage} resizeMode="contain" />
             )}
             {selectedItem && selectedIsVideo && (
-              <View style={styles.videoContainer}>
-                <Video
-                  source={{ uri: selectedItem.url }}
-                  style={styles.videoPlayer}
-                  resizeMode={ResizeMode.CONTAIN}
-                  useNativeControls
-                  shouldPlay
-                  isLooping
-                />
-              </View>
+              <Video source={{ uri: selectedItem.url }} style={styles.videoPlayer} resizeMode={ResizeMode.CONTAIN} useNativeControls shouldPlay isLooping />
             )}
           </View>
-
-          {/* 底部信息 */}
-          {selectedItem && (
-            <View style={styles.previewFooter}>
-              <View style={styles.previewMeta}>
-                <View style={[styles.typeTag, selectedIsVideo && styles.typeTagVideo, { position: 'relative', top: 0, right: 0 }]}>
-                  <Ionicons name={selectedIsVideo ? 'videocam' : 'image'} size={10} color="#fff" />
-                  <Text style={styles.typeTagText}>{selectedIsVideo ? '视频' : '图片'}</Text>
-                </View>
-                <Text style={styles.previewDate}>
-                  {new Date(selectedItem.createdAt).toLocaleString('zh-CN')}
-                </Text>
-              </View>
-              {selectedItem.toolType && (
-                <Text style={styles.previewTool}>工具: {selectedItem.toolType}</Text>
-              )}
-            </View>
-          )}
         </Animated.View>
       </Modal>
     </SafeAreaView>
@@ -321,187 +226,43 @@ export default function MaterialLibraryScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.bg },
+  container: { flex: 1, backgroundColor: Colors.card },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.xl,
-    paddingVertical: Spacing.md,
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    paddingHorizontal: Spacing.xl, paddingVertical: Spacing.md,
   },
   headerTitle: { fontSize: FontSize.lg, fontWeight: FontWeight.bold, color: Colors.text },
-  count: { fontSize: FontSize.sm, color: Colors.textMuted },
-  tabRow: {
-    flexDirection: 'row',
-    gap: Spacing.sm,
-    paddingHorizontal: Spacing.xl,
-    marginBottom: Spacing.md,
-  },
-  tab: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.lg,
+  headerRight: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
+  creditsPill: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    backgroundColor: Colors.card, paddingHorizontal: 8, paddingVertical: 4,
     borderRadius: BorderRadius.full,
-    backgroundColor: Colors.card,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.08, shadowRadius: 4, elevation: 2,
   },
-  tabActive: { backgroundColor: Colors.primary },
-  tabText: { fontSize: FontSize.sm, color: Colors.textMuted },
-  tabTextActive: { color: Colors.text, fontWeight: FontWeight.semibold },
-  centered: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: Spacing.md,
-    paddingBottom: 100,
+  creditIcon: { width: 16, height: 16, borderRadius: 8, backgroundColor: Colors.primary, justifyContent: 'center', alignItems: 'center' },
+  creditsText: { fontSize: FontSize.sm, fontWeight: FontWeight.semibold, color: Colors.primary },
+  filterSection: { paddingHorizontal: Spacing.xl, gap: Spacing.sm, marginBottom: Spacing.md },
+  tabRow: { flexDirection: 'row', gap: Spacing.sm },
+  pillBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    paddingHorizontal: Spacing.lg, paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.full, backgroundColor: Colors.card,
+    borderWidth: 1, borderColor: Colors.border,
   },
-  emptyText: { fontSize: FontSize.md, color: Colors.textSecondary },
-  emptySub: { fontSize: FontSize.sm, color: Colors.textMuted, textAlign: 'center', paddingHorizontal: Spacing.xl },
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    paddingHorizontal: Spacing.xl,
-    gap: ITEM_GAP,
-    paddingBottom: 100,
-  },
-  gridItem: {
-    width: ITEM_WIDTH,
-    backgroundColor: Colors.card,
-    borderRadius: BorderRadius.md,
-    overflow: 'hidden',
-  },
-  itemImage: {
-    height: ITEM_WIDTH * 1.2,
-    backgroundColor: '#1A1A2E',
-    position: 'relative',
-  },
-  itemImageFull: {
-    width: '100%',
-    height: '100%',
-    position: 'absolute',
-  },
-  skeleton: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#1A1A2E',
-  },
-  playOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.25)',
-  },
-  playBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: Colors.primary + 'CC',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  typeTag: {
-    position: 'absolute',
-    top: Spacing.sm,
-    right: Spacing.sm,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: BorderRadius.sm,
-  },
-  typeTagVideo: {
-    backgroundColor: Colors.primary + 'CC',
-  },
-  typeTagText: {
-    color: '#fff',
-    fontSize: 10,
-    fontWeight: FontWeight.medium,
-  },
-  itemFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: Spacing.sm,
-  },
-  itemDate: { fontSize: FontSize.xs, color: Colors.textMuted, flex: 1 },
-
-  // Preview Modal
-  previewOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.95)',
-  },
-  previewHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.xl,
-    paddingVertical: Spacing.md,
-    paddingTop: 50,
-  },
-  previewCloseBtn: {
-    width: 40, height: 40,
-    borderRadius: 20,
-    backgroundColor: Colors.cardLight,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  previewTitle: {
-    fontSize: FontSize.md,
-    fontWeight: FontWeight.semibold,
-    color: Colors.text,
-  },
-  previewDeleteBtn: {
-    width: 40, height: 40,
-    borderRadius: 20,
-    backgroundColor: Colors.cardLight,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  previewContent: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: Spacing.md,
-  },
-  previewImage: {
-    flex: 1,
-    width: '100%',
-  },
-  videoContainer: {
-    flex: 1,
-    width: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-    overflow: 'hidden',
-  },
-  videoPlayer: {
-    flex: 1,
-    width: '100%',
-    backgroundColor: '#000',
-  },
-  previewFooter: {
-    paddingHorizontal: Spacing.xl,
-    paddingVertical: Spacing.lg,
-    paddingBottom: 40,
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
-  },
-  previewMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.md,
-    marginBottom: Spacing.xs,
-  },
-  previewDate: {
-    fontSize: FontSize.sm,
-    color: Colors.textMuted,
-  },
-  previewTool: {
-    fontSize: FontSize.xs,
-    color: Colors.textDark,
-  },
+  pillBtnActive: { backgroundColor: Colors.text, borderColor: Colors.text },
+  pillText: { fontSize: FontSize.sm, color: Colors.text },
+  pillTextActive: { color: '#fff', fontWeight: FontWeight.semibold },
+  centered: { flex: 1 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: Spacing.xl, gap: ITEM_GAP, paddingBottom: 100 },
+  gridItem: { width: ITEM_WIDTH, borderRadius: BorderRadius.md, overflow: 'hidden' },
+  itemImage: { height: ITEM_WIDTH * 1.2, backgroundColor: Colors.cardMuted, position: 'relative' },
+  itemImageFull: { width: '100%', height: '100%', position: 'absolute' },
+  skeleton: { ...StyleSheet.absoluteFillObject, justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.cardMuted },
+  playOverlay: { ...StyleSheet.absoluteFillObject, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.2)' },
+  playBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
+  previewOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.95)' },
+  previewHeader: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: Spacing.xl, paddingTop: 50, paddingBottom: Spacing.md },
+  previewContent: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  previewImage: { flex: 1, width: '100%' },
+  videoPlayer: { flex: 1, width: '100%', backgroundColor: '#000' },
 });

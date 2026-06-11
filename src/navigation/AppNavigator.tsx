@@ -2,13 +2,12 @@ import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '../theme';
+import { Text, StyleSheet } from 'react-native';
+import { Colors, Shadow } from '../theme';
 
-// Screens
 import HomeScreen from '../screens/HomeScreen';
 import ExploreScreen from '../screens/ExploreScreen';
 import AIToolsScreen from '../screens/AIToolsScreen';
-import ProfileScreen from '../screens/ProfileScreen';
 import SplashScreen from '../screens/SplashScreen';
 import SubscriptionScreen from '../screens/SubscriptionScreen';
 import ProMembershipScreen from '../screens/ProMembershipScreen';
@@ -35,50 +34,47 @@ import LegEnhanceScreen from '../screens/ai-tools/LegEnhanceScreen';
 import MuscleScreen from '../screens/ai-tools/MuscleScreen';
 import MuscleEnhanceScreen from '../screens/ai-tools/MuscleEnhanceScreen';
 
-// 导航参数类型定义
 export type RootStackParamList = {
-  MainTabs: undefined;
+  MainTabs: { screen?: keyof TabParamList } | undefined;
   SplashScreen: undefined;
   SubscriptionScreen: undefined;
   ProMembershipScreen: undefined;
   MaterialLibraryScreen: undefined;
   CustomVideoScreen: undefined;
   PhotoPickerScreen: { toolType: string };
-  HDReshapeScreen: undefined;
-  HDRepairScreen: undefined;
-  ObjectRemovalScreen: undefined;
-  BackgroundRemovalScreen: undefined;
-  SuperRealisticScreen: undefined;
-  LipPlumpScreen: undefined;
-  HairDyeScreen: undefined;
-  JawlineScreen: undefined;
-  HairSmoothScreen: undefined;
-  HairRepairScreen: undefined;
-  AIEditScreen: undefined;
+  HDReshapeScreen: { imageUri?: string } | undefined;
+  HDRepairScreen: { imageUri?: string } | undefined;
+  ObjectRemovalScreen: { imageUri?: string } | undefined;
+  BackgroundRemovalScreen: { imageUri?: string } | undefined;
+  SuperRealisticScreen: { imageUri?: string } | undefined;
+  LipPlumpScreen: { imageUri?: string } | undefined;
+  HairDyeScreen: { imageUri?: string } | undefined;
+  JawlineScreen: { imageUri?: string } | undefined;
+  HairSmoothScreen: { imageUri?: string } | undefined;
+  HairRepairScreen: { imageUri?: string } | undefined;
+  AIEditScreen: { imageUri?: string } | undefined;
   AIToolDetailScreen: { collectionKey: string };
-  BeautyScreen: undefined;
-  ColorGradeScreen: undefined;
-  FilterScreen: undefined;
-  ProportionScreen: undefined;
-  LegEnhanceScreen: undefined;
-  MuscleScreen: undefined;
-  MuscleEnhanceScreen: undefined;
+  BeautyScreen: { imageUri?: string } | undefined;
+  ColorGradeScreen: { imageUri?: string } | undefined;
+  FilterScreen: { imageUri?: string } | undefined;
+  ProportionScreen: { imageUri?: string } | undefined;
+  LegEnhanceScreen: { imageUri?: string } | undefined;
+  MuscleScreen: { imageUri?: string } | undefined;
+  MuscleEnhanceScreen: { imageUri?: string } | undefined;
 };
 
 export type TabParamList = {
   HomeTab: undefined;
   ExploreTab: undefined;
   AIToolsTab: undefined;
-  ProfileTab: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<TabParamList>();
 
-// 深色导航主题
-const DarkTheme = {
+const LightTheme = {
   ...DefaultTheme,
-  dark: true,
+  dark: false,
   colors: {
     ...DefaultTheme.colors,
     primary: Colors.primary,
@@ -90,7 +86,10 @@ const DarkTheme = {
   },
 };
 
-// 底部 Tab 导航
+function AiTabIcon({ color }: { color: string }) {
+  return <Text style={[tabStyles.aiIcon, { color }]}>Ai</Text>;
+}
+
 function MainTabs() {
   return (
     <Tab.Navigator
@@ -103,6 +102,10 @@ function MainTabs() {
           height: 85,
           paddingBottom: 28,
           paddingTop: 8,
+          borderTopLeftRadius: 20,
+          borderTopRightRadius: 20,
+          position: 'absolute',
+          ...Shadow.tabBar,
         },
         tabBarActiveTintColor: Colors.primary,
         tabBarInactiveTintColor: Colors.textMuted,
@@ -111,53 +114,33 @@ function MainTabs() {
           fontWeight: '500',
         },
         tabBarIcon: ({ color, size }) => {
-          let iconName: keyof typeof Ionicons.glyphMap = 'home';
-          switch (route.name) {
-            case 'HomeTab':
-              iconName = 'home';
-              break;
-            case 'ExploreTab':
-              iconName = 'compass';
-              break;
-            case 'AIToolsTab':
-              iconName = 'color-wand';
-              break;
-            case 'ProfileTab':
-              iconName = 'person';
-              break;
+          if (route.name === 'AIToolsTab') {
+            return <AiTabIcon color={color} />;
           }
+          let iconName: keyof typeof Ionicons.glyphMap = 'home';
+          if (route.name === 'ExploreTab') iconName = 'compass-outline';
           return <Ionicons name={iconName} size={size} color={color} />;
         },
       })}
     >
-      <Tab.Screen
-        name="HomeTab"
-        component={HomeScreen}
-        options={{ tabBarLabel: '首页' }}
-      />
-      <Tab.Screen
-        name="ExploreTab"
-        component={ExploreScreen}
-        options={{ tabBarLabel: '探索' }}
-      />
-      <Tab.Screen
-        name="AIToolsTab"
-        component={AIToolsScreen}
-        options={{ tabBarLabel: 'AI 工具' }}
-      />
-      <Tab.Screen
-        name="ProfileTab"
-        component={ProfileScreen}
-        options={{ tabBarLabel: '个人中心' }}
-      />
+      <Tab.Screen name="HomeTab" component={HomeScreen} options={{ tabBarLabel: '首页' }} />
+      <Tab.Screen name="ExploreTab" component={ExploreScreen} options={{ tabBarLabel: '探索' }} />
+      <Tab.Screen name="AIToolsTab" component={AIToolsScreen} options={{ tabBarLabel: 'AI工具' }} />
     </Tab.Navigator>
   );
 }
 
-// 根 Stack 导航
+const tabStyles = StyleSheet.create({
+  aiIcon: {
+    fontSize: 18,
+    fontWeight: '700',
+    fontStyle: 'italic',
+  },
+});
+
 export default function AppNavigator() {
   return (
-    <NavigationContainer theme={DarkTheme}>
+    <NavigationContainer theme={LightTheme}>
       <Stack.Navigator
         initialRouteName="SplashScreen"
         screenOptions={{

@@ -9,7 +9,7 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <TaskProvider>
-        <StatusBar style="light" />
+        <StatusBar style="dark" />
         <View style={styles.container}>
           <AppNavigator />
           <LoadingOverlay />

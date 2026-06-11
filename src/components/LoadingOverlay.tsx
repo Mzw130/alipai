@@ -94,11 +94,11 @@ const styles = StyleSheet.create({
     zIndex: 9999,
   },
   card: {
-    backgroundColor: '#1A1A2E',
+    backgroundColor: Colors.card,
     borderRadius: BorderRadius.xl,
     padding: Spacing.lg,
     borderWidth: 1,
-    borderColor: Colors.primary + '40',
+    borderColor: Colors.border,
     ...Shadow.card,
   },
   headerRow: {
@@ -112,7 +112,7 @@ const styles = StyleSheet.create({
   hintMsg: { fontSize: FontSize.xs, color: Colors.success, marginTop: Spacing.sm },
   miniBar: {
     position: 'absolute', top: 60, left: Spacing.xl, right: Spacing.xl,
-    backgroundColor: '#1A1A2E', borderRadius: BorderRadius.full,
+    backgroundColor: Colors.card, borderRadius: BorderRadius.full,
     paddingVertical: Spacing.sm, paddingHorizontal: Spacing.lg,
     flexDirection: 'row', alignItems: 'center', gap: Spacing.sm,
     borderWidth: 1, borderColor: Colors.primary + '40',

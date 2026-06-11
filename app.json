@@ -5,9 +5,9 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "dark",
+    "userInterfaceStyle": "light",
     "splash": {
-      "backgroundColor": "#0D0D0D"
+      "backgroundColor": "#FAF7F5"
     },
     "ios": {
       "supportsTablet": false,
@@ -15,7 +15,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#0D0D0D"
+        "backgroundColor": "#FAF7F5"
       },
       "package": "com.clipai.app"
     },

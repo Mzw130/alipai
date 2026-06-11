@@ -2,107 +2,89 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-nati
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, FontSize, FontWeight, Spacing, BorderRadius } from '../theme';
-
-interface Tool {
-  key: string;
-  label: string;
-  icon: keyof typeof Ionicons.glyphMap;
-  screen: string;
-  color: string;
-}
-
-const TOOLS: Tool[] = [
-  { key: 'reshape', label: '重塑', icon: 'resize', screen: 'HDReshapeScreen', color: '#F59E0B' },
-  { key: 'hd_repair', label: '高清修复', icon: 'sparkles', screen: 'HDRepairScreen', color: '#8B5CF6' },
-  { key: 'obj_remove', label: '物体消除', icon: 'remove-circle', screen: 'ObjectRemovalScreen', color: '#F87171' },
-  { key: 'bg_remove', label: '背景移除', icon: 'layers', screen: 'BackgroundRemovalScreen', color: '#4ADE80' },
-  { key: 'realistic', label: '超级写实', icon: 'star', screen: 'SuperRealisticScreen', color: '#FBBF24' },
-  { key: 'beauty', label: '美颜', icon: 'happy', screen: 'BeautyScreen', color: '#FB7185' },
-  { key: 'hair_dye', label: '染发', icon: 'color-palette', screen: 'HairDyeScreen', color: '#F472B6' },
-  { key: 'lip_plump', label: '丰唇', icon: 'rose', screen: 'LipPlumpScreen', color: '#FB7185' },
-  { key: 'jawline', label: '下颌轮廓', icon: 'body', screen: 'JawlineScreen', color: '#A78BFA' },
-  { key: 'hair_smooth', label: '发质顺滑', icon: 'water', screen: 'HairSmoothScreen', color: '#60A5FA' },
-  { key: 'hair_repair', label: '发质修复', icon: 'shield-checkmark', screen: 'HairRepairScreen', color: '#34D399' },
-  { key: 'proportion', label: '比例调整', icon: 'swap-vertical', screen: 'ProportionScreen', color: '#06B6D4' },
-  { key: 'leg_enhance', label: '丰腿', icon: 'fitness', screen: 'LegEnhanceScreen', color: '#F59E0B' },
-  { key: 'muscle', label: '肌肉', icon: 'barbell', screen: 'MuscleScreen', color: '#EF4444' },
-  { key: 'muscle_enhance', label: '肌肉增强', icon: 'flash', screen: 'MuscleEnhanceScreen', color: '#EC4899' },
-  { key: 'color_grade', label: '调色', icon: 'contrast', screen: 'ColorGradeScreen', color: '#38BDF8' },
-  { key: 'filter', label: '滤镜', icon: 'filter', screen: 'FilterScreen', color: '#A78BFA' },
-  { key: 'ai_edit', label: 'AI编辑', icon: 'color-wand', screen: 'AIEditScreen', color: '#8B5CF6' },
-];
+import { HOME_TOOLS } from '../constants/tools';
 
 export default function AiToolBar() {
   const navigation = useNavigation<any>();
 
   return (
     <View style={styles.wrapper}>
-      <Text style={styles.sectionTitle}>AI 编辑工具</Text>
       <View style={styles.container}>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
         >
-          {TOOLS.map((tool) => (
+          {HOME_TOOLS.map((tool) => (
             <TouchableOpacity
               key={tool.key}
               style={styles.toolItem}
-              onPress={() => navigation.navigate(tool.screen as any)}
+              onPress={() => navigation.navigate(tool.screen)}
               activeOpacity={0.7}
             >
-              <View style={[styles.iconCircle, { borderColor: tool.color + '40' }]}>
-                <Ionicons name={tool.icon} size={24} color={tool.color} />
+              <View style={styles.iconSquare}>
+                <Ionicons name={tool.icon} size={22} color={Colors.text} />
+                {tool.isPro && (
+                  <View style={styles.proBadge}>
+                    <Text style={styles.proBadgeText}>Pro</Text>
+                  </View>
+                )}
               </View>
-              <Text style={styles.toolLabel} numberOfLines={2}>
-                {tool.label}
-              </Text>
+              <Text style={styles.toolLabel} numberOfLines={1}>{tool.label}</Text>
             </TouchableOpacity>
           ))}
         </ScrollView>
+        <View style={styles.handle} />
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  wrapper: {
-    marginTop: Spacing.md,
-  },
-  sectionTitle: {
-    fontSize: FontSize.md,
-    fontWeight: FontWeight.semibold,
-    color: Colors.text,
-    paddingHorizontal: Spacing.xl,
-    marginBottom: Spacing.md,
-  },
+  wrapper: { marginTop: Spacing.sm },
   container: {
     backgroundColor: Colors.bgSecondary,
-    paddingVertical: Spacing.md,
+    marginHorizontal: Spacing.xl,
+    borderRadius: BorderRadius.xl,
+    paddingTop: Spacing.lg,
+    paddingBottom: Spacing.sm,
   },
   scrollContent: {
-    paddingHorizontal: Spacing.xl,
-    gap: Spacing.base,
+    paddingHorizontal: Spacing.lg,
+    gap: Spacing.lg,
   },
-  toolItem: {
-    alignItems: 'center',
-    width: 70,
-    gap: 8,
-  },
-  iconCircle: {
-    width: 54,
-    height: 54,
-    borderRadius: 27,
-    backgroundColor: Colors.card,
+  toolItem: { alignItems: 'center', width: 64, gap: 6 },
+  iconSquare: {
+    width: 52,
+    height: 52,
+    borderRadius: BorderRadius.lg,
+    backgroundColor: Colors.cardLight,
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 1.5,
+    position: 'relative',
   },
+  proBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -8,
+    backgroundColor: Colors.proBadge,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: BorderRadius.sm,
+  },
+  proBadgeText: { fontSize: 8, color: '#fff', fontWeight: FontWeight.bold },
   toolLabel: {
     fontSize: 11,
-    color: Colors.textSecondary,
+    color: Colors.text,
     fontWeight: FontWeight.medium,
     textAlign: 'center',
-    lineHeight: 14,
+  },
+  handle: {
+    width: 36,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: Colors.border,
+    alignSelf: 'center',
+    marginTop: Spacing.sm,
   },
 });

@@ -11,6 +11,7 @@
 import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react';
 import { Alert, AppState, AppStateStatus } from 'react-native';
 import { enhanceImage, getTaskStatus, EnhanceResult } from '../api/index';
+import { logAiTaskStart, logAiTaskComplete, logAiTaskFailed } from '../services/analytics';
 
 // ==================== 类型 ====================
 export interface AITask {
@@ -104,6 +105,10 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
         }
 
         if (result.status === 'completed') {
+          logAiTaskComplete(toolType, {
+            processing_time_ms: (result as any).processing_time_ms,
+            credits_used: (result as any).credits_used,
+          });
           updateTask(taskId, {
             status: 'completed',
             resultUrl: result.result_url ?? undefined,
@@ -117,6 +122,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
             Alert.alert('✨ AI 处理完成', `${toolType} 任务已完成，结果已保存到素材库`);
           }
         } else if (result.status === 'failed') {
+          logAiTaskFailed(toolType, result.error_message || '处理失败');
           updateTask(taskId, {
             status: 'failed',
             errorMessage: result.error_message || '处理失败',
@@ -157,6 +163,8 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
     setActiveTaskState(newTask);
     tasksRef.current = [...tasksRef.current, newTask];
 
+    logAiTaskStart(toolType);
+
     try {
       // 上传中
       updateTask(taskId, {});
@@ -168,6 +176,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (!result) {
+        logAiTaskFailed(toolType, '网络错误');
         updateTask(taskId, { status: 'failed', errorMessage: '网络错误' });
         return taskId;
       }
@@ -180,6 +189,10 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
       }
 
       // 同步完成
+      logAiTaskComplete(toolType, {
+        processing_time_ms: result.processing_time_ms,
+        credits_used: result.credits_used,
+      });
       updateTask(taskId, {
         status: 'completed',
         resultUrl: result.result_url,
@@ -189,6 +202,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
 
       return taskId;
     } catch (e: any) {
+      logAiTaskFailed(toolType, e.message);
       updateTask(taskId, { status: 'failed', errorMessage: e.message });
       return taskId;
     }

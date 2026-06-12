@@ -22,7 +22,8 @@
     "plugins": [
       "expo-image-picker",
       "expo-asset",
-      "expo-font"
+      "expo-font",
+      "react-native-appsflyer"
     ]
   }
 }

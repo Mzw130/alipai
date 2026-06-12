@@ -5,6 +5,7 @@
  *
  * 基础 URL 配置: 修改 API_BASE_URL 指向你的后端服务地址
  */
+import { bindAnalyticsUser } from '../services/analytics';
 
 // ==================== 配置 ====================
 const API_BASE_URL = __DEV__
@@ -29,6 +30,9 @@ async function ensureAuth(): Promise<void> {
         const json = await res.json();
         if (json.code === 0 && json.data?.token) {
           authToken = json.data.token;
+          if (json.data.user?.id) {
+            bindAnalyticsUser(json.data.user.id, json.data.user.isNewUser);
+          }
           console.log('[API] 自动登录成功, userId:', json.data.user?.id);
         }
       } catch (e) {
@@ -160,6 +164,9 @@ export async function verifyCode(phone: string, code: string) {
 
   if (res.data?.token) {
     setAuthToken(res.data.token);
+    if (res.data.user?.id) {
+      bindAnalyticsUser(res.data.user.id, res.data.user.isNewUser);
+    }
   }
 
   return res.data;
